@@ -24,9 +24,9 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'kishan-kavach-secret-ke
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
 # WhatsApp config
-CALLMEBOT_PHONE = os.environ.get('WHATSAPP_PHONE', '')
+CALLMEBOT_PHONE = os.environ.get('WHATSAPP_PHONE', '+919838794234')
 CALLMEBOT_APIKEY = os.environ.get('WHATSAPP_APIKEY', '')
-WEATHER_API_KEY = os.environ.get('WEATHER_API_KEY', '')
+WEATHER_API_KEY = os.environ.get('WEATHER_API_KEY', '7f6b21a345966c8abb206599910c8bb5')
 
 init_db()
 
