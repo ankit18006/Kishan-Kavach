@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>किसान डैशबोर्ड - Kishan Kavach</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dashboard-page">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span class="logo-icon">🛡️</span>
+            <span class="logo-text">Kishan <span class="gradient-text">Kavach</span></span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#dashboard" class="sidebar-link active" data-section="dashboard">
+                <span class="sidebar-icon">📊</span> डैशबोर्ड
+            </a>
+            <a href="#devices" class="sidebar-link" data-section="devices">
+                <span class="sidebar-icon">📡</span> डिवाइस
+            </a>
+            <a href="#requests" class="sidebar-link" data-section="requests">
+                <span class="sidebar-icon">📨</span> अनुरोध
+            </a>
+            <a href="#weather" class="sidebar-link" data-section="weather">
+                <span class="sidebar-icon">🌦️</span> मौसम
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm btn-full">
+                🚪 लॉगआउट
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Topbar -->
+        <header class="topbar">
+            <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+            <div class="topbar-info">
+                <h2>🌾 किसान डैशबोर्ड</h2>
+            </div>
+            <div class="topbar-user">
+                <span class="user-role-badge farmer-badge">किसान</span>
+                <span class="user-name">{{ user.name }}</span>
+            </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-container">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Dashboard Section -->
+        <section class="content-section active" id="section-dashboard">
+            {% if approved_devices %}
+            <div class="section-title-bar">
+                <h3>📊 लाइव डेटा</h3>
+                <select id="deviceSelector" class="device-select">
+                    {% for dev in approved_devices %}
+                    <option value="{{ dev.device_id }}">{{ dev.device_id }} ({{ dev.owner_name }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="sensor-cards" id="sensorCards">
+                <div class="sensor-card glass-card" id="card-temp">
+                    <div class="sensor-icon">🌡️</div>
+                    <div class="sensor-info">
+                        <span class="sensor-label">तापमान</span>
+                        <span class="sensor-value" id="tempValue">--</span>
+                        <span class="sensor-unit">°C</span>
+                    </div>
+                </div>
+                <div class="sensor-card glass-card" id="card-humidity">
+                    <div class="sensor-icon">💧</div>
+                    <div class="sensor-info">
+                        <span class="sensor-label">नमी</span>
+                        <span class="sensor-value" id="humidityValue">--</span>
+                        <span class="sensor-unit">%</span>
+                    </div>
+                </div>
+                <div class="sensor-card glass-card" id="card-gas">
+                    <div class="sensor-icon">💨</div>
+                    <div class="sensor-info">
+                        <span class="sensor-label">गैस स्तर</span>
+                        <span class="sensor-value" id="gasValue">--</span>
+                        <span class="sensor-unit">PPM</span>
+                    </div>
+                </div>
+                <div class="sensor-card glass-card" id="card-battery">
+                    <div class="sensor-icon">🔋</div>
+                    <div class="sensor-info">
+                        <span class="sensor-label">बैटरी</span>
+                        <span class="sensor-value" id="batteryValue">--</span>
+                        <span class="sensor-unit">%</span>
+                    </div>
+                </div>
+                <div class="sensor-card glass-card spoilage-card" id="card-spoilage">
+                    <div class="sensor-icon">⚠️</div>
+                    <div class="sensor-info">
+                        <span class="sensor-label">खराब होने का जोखिम</span>
+                        <span class="sensor-value spoilage-badge" id="spoilageValue">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="chart-container glass-card">
+                <h3>📈 डेटा ग्राफ (पिछले 50 रिकॉर्ड)</h3>
+                <canvas id="sensorChart"></canvas>
+            </div>
+            {% else %}
+            <div class="empty-state glass-card">
+                <div class="empty-icon">🔒</div>
+                <h3>कोई एक्सेस नहीं</h3>
+                <p>आपके पास अभी किसी डिवाइस का एक्सेस नहीं है।<br>कृपया गोदाम मालिक को एक्सेस अनुरोध भेजें।</p>
+                <a href="#requests" class="btn btn-gradient" onclick="switchSection('requests')">अनुरोध भेजें →</a>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Devices Section -->
+        <section class="content-section" id="section-devices">
+            <h3 class="section-heading">📡 मेरे स्वीकृत डिवाइस</h3>
+            {% if approved_devices %}
+            <div class="table-container glass-card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>डिवाइस ID</th>
+                            <th>मालिक</th>
+                            <th>स्थिति</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dev in approved_devices %}
+                        <tr>
+                            <td><strong>{{ dev.device_id }}</strong></td>
+                            <td>{{ dev.owner_name }}</td>
+                            <td><span class="status-badge status-approved">✅ स्वीकृत</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state glass-card">
+                <p>कोई स्वीकृत डिवाइस नहीं</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Requests Section -->
+        <section class="content-section" id="section-requests">
+            <h3 class="section-heading">📨 एक्सेस अनुरोध</h3>
+
+            <!-- Send Request Form -->
+            <div class="form-card glass-card">
+                <h4>नया अनुरोध भेजें</h4>
+                <form method="POST" action="{{ url_for('api_request_access') }}" class="inline-form">
+                    <div class="form-group">
+                        <label>गोदाम मालिक चुनें</label>
+                        <select name="owner_id" required>
+                            <option value="">-- मालिक चुनें --</option>
+                            {% for owner in owners %}
+                            <option value="{{ owner.id }}">{{ owner.name }} ({{ owner.email }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-gradient">अनुरोध भेजें</button>
+                </form>
+            </div>
+
+            <!-- My Requests -->
+            <div class="table-container glass-card" style="margin-top: 1.5rem;">
+                <h4>मेरे अनुरोध</h4>
+                {% if my_requests %}
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>मालिक</th>
+                            <th>स्थिति</th>
+                            <th>तारीख</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in my_requests %}
+                        <tr>
+                            <td>{{ req.owner_name }}</td>
+                            <td>
+                                {% if req.status == 'pending' %}
+                                <span class="status-badge status-pending">⏳ लंबित</span>
+                                {% elif req.status == 'approved' %}
+                                <span class="status-badge status-approved">✅ स्वीकृत</span>
+                                {% else %}
+                                <span class="status-badge status-rejected">❌ अस्वीकृत</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ req.requested_at[:10] if req.requested_at else '' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="empty-text">कोई अनुरोध नहीं भेजा गया</p>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- Weather Section -->
+        <section class="content-section" id="section-weather">
+            <h3 class="section-heading">🌦️ मौसम की जानकारी</h3>
+            <div class="weather-search glass-card">
+                <div class="form-group">
+                    <label>शहर का नाम</label>
+                    <div class="inline-form">
+                        <input type="text" id="weatherCity" placeholder="जैसे: Delhi, Mumbai" value="Delhi">
+                        <button class="btn btn-gradient" onclick="fetchWeather()">देखें</button>
+                    </div>
+                </div>
+            </div>
+            <div class="weather-card glass-card" id="weatherCard" style="display:none; margin-top: 1.5rem;">
+                <div class="weather-main">
+                    <img id="weatherIcon" src="" alt="weather" class="weather-icon-img">
+                    <div class="weather-info">
+                        <h3 id="weatherCityName">--</h3>
+                        <p id="weatherDesc">--</p>
+                    </div>
+                </div>
+                <div class="weather-stats">
+                    <div class="weather-stat">
+                        <span class="weather-stat-label">🌡 तापमान</span>
+                        <span class="weather-stat-value" id="weatherTemp">--°C</span>
+                    </div>
+                    <div class="weather-stat">
+                        <span class="weather-stat-label">💧 नमी</span>
+                        <span class="weather-stat-value" id="weatherHumidity">--%</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const USER_ROLE = 'farmer';
+        const APPROVED_DEVICES = {{ approved_devices | tojson }};
+        const DEVICE_DATA = {{ device_data | tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
