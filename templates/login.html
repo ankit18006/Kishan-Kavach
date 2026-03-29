@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>लॉगिन - Kishan Kavach</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-bg-effects">
+            <div class="hero-glow glow-1"></div>
+            <div class="hero-glow glow-2"></div>
+        </div>
+        <div class="auth-card glass-card fade-up">
+            <div class="auth-header">
+                <a href="/" class="auth-logo">
+                    <span class="logo-icon">🛡️</span>
+                    <span class="logo-text">Kishan <span class="gradient-text">Kavach</span></span>
+                </a>
+                <h2>लॉगिन करें</h2>
+                <p>अपने अकाउंट में लॉगिन करें</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" class="auth-form">
+                <div class="form-group">
+                    <label for="email">📧 ईमेल</label>
+                    <input type="email" id="email" name="email" placeholder="अपना ईमेल डालें" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">🔒 पासवर्ड</label>
+                    <input type="password" id="password" name="password" placeholder="अपना पासवर्ड डालें" required>
+                </div>
+                <button type="submit" class="btn btn-gradient btn-full">लॉगिन करें</button>
+            </form>
+            <div class="auth-footer">
+                <p>अकाउंट नहीं है? <a href="{{ url_for('register') }}" class="gradient-text">रजिस्टर करें</a></p>
+                <a href="/" class="back-link">← होम पेज पर जाएं</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
