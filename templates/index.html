@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kishan Kavach - किसान कवच</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="landing-page">
+    <!-- Navbar -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <span class="logo-icon">🛡️</span>
+                <span class="logo-text">Kishan <span class="gradient-text">Kavach</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="#features" class="nav-link">विशेषताएं</a>
+                <a href="#how-it-works" class="nav-link">कैसे काम करता है</a>
+                <a href="{{ url_for('login') }}" class="nav-link">लॉगिन</a>
+                <a href="{{ url_for('register') }}" class="btn btn-gradient btn-sm">रजिस्टर करें</a>
+            </div>
+            <button class="mobile-toggle" id="mobileToggle">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="#features" class="nav-link">विशेषताएं</a>
+            <a href="#how-it-works" class="nav-link">कैसे काम करता है</a>
+            <a href="{{ url_for('login') }}" class="nav-link">लॉगिन</a>
+            <a href="{{ url_for('register') }}" class="btn btn-gradient btn-sm">रजिस्टर करें</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-bg-effects">
+            <div class="hero-glow glow-1"></div>
+            <div class="hero-glow glow-2"></div>
+            <div class="hero-glow glow-3"></div>
+        </div>
+        <div class="container">
+            <div class="hero-content fade-up">
+                <div class="hero-badge">🌾 किसानों के लिए स्मार्ट तकनीक</div>
+                <h1 class="hero-title">
+                    <span class="gradient-text">स्मार्ट भंडारण</span> निगरानी
+                    <br>किसानों के लिए
+                </h1>
+                <p class="hero-subtitle">
+                    अपने गोदाम की फसल को खराब होने से बचाएं। तापमान, नमी और गैस की 
+                    रियल-टाइम निगरानी करें। तुरंत अलर्ट पाएं।
+                </p>
+                <div class="hero-actions">
+                    <a href="{{ url_for('register') }}" class="btn btn-gradient btn-lg">
+                        अभी शुरू करें
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                    <a href="#features" class="btn btn-outline btn-lg">
+                        और जानें
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item fade-up" style="animation-delay: 0.2s">
+                        <span class="stat-number">24/7</span>
+                        <span class="stat-label">निगरानी</span>
+                    </div>
+                    <div class="stat-item fade-up" style="animation-delay: 0.4s">
+                        <span class="stat-number">तुरंत</span>
+                        <span class="stat-label">WhatsApp अलर्ट</span>
+                    </div>
+                    <div class="stat-item fade-up" style="animation-delay: 0.6s">
+                        <span class="stat-number">100%</span>
+                        <span class="stat-label">सुरक्षित</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual fade-up" style="animation-delay: 0.3s">
+                <div class="dashboard-preview">
+                    <div class="preview-card glass-card">
+                        <div class="preview-icon temp-icon">🌡️</div>
+                        <div class="preview-info">
+                            <span class="preview-label">तापमान</span>
+                            <span class="preview-value">28.5°C</span>
+                        </div>
+                        <div class="preview-status status-ok">सामान्य</div>
+                    </div>
+                    <div class="preview-card glass-card">
+                        <div class="preview-icon humidity-icon">💧</div>
+                        <div class="preview-info">
+                            <span class="preview-label">नमी</span>
+                            <span class="preview-value">65%</span>
+                        </div>
+                        <div class="preview-status status-ok">सामान्य</div>
+                    </div>
+                    <div class="preview-card glass-card">
+                        <div class="preview-icon gas-icon">💨</div>
+                        <div class="preview-info">
+                            <span class="preview-label">गैस स्तर</span>
+                            <span class="preview-value">320 PPM</span>
+                        </div>
+                        <div class="preview-status status-warning">चेतावनी</div>
+                    </div>
+                    <div class="preview-card glass-card">
+                        <div class="preview-icon battery-icon">🔋</div>
+                        <div class="preview-info">
+                            <span class="preview-label">बैटरी</span>
+                            <span class="preview-value">85%</span>
+                        </div>
+                        <div class="preview-status status-ok">अच्छी</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section" id="features">
+        <div class="container">
+            <div class="section-header fade-up">
+                <h2 class="section-title">हमारी <span class="gradient-text">विशेषताएं</span></h2>
+                <p class="section-subtitle">किसानों के लिए बनाया गया, किसानों के लिए डिज़ाइन किया गया</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card glass-card fade-up" style="animation-delay: 0.1s">
+                    <div class="feature-icon">📊</div>
+                    <h3>रियल-टाइम डैशबोर्ड</h3>
+                    <p>तापमान, नमी, गैस और बैटरी की लाइव निगरानी करें</p>
+                </div>
+                <div class="feature-card glass-card fade-up" style="animation-delay: 0.2s">
+                    <div class="feature-icon">📱</div>
+                    <h3>WhatsApp अलर्ट</h3>
+                    <p>खतरा होने पर तुरंत WhatsApp पर सूचना पाएं</p>
+                </div>
+                <div class="feature-card glass-card fade-up" style="animation-delay: 0.3s">
+                    <div class="feature-icon">🌦️</div>
+                    <h3>मौसम की जानकारी</h3>
+                    <p>अपने क्षेत्र का मौसम देखें और सही निर्णय लें</p>
+                </div>
+                <div class="feature-card glass-card fade-up" style="animation-delay: 0.4s">
+                    <div class="feature-icon">📈</div>
+                    <h3>ग्राफ और इतिहास</h3>
+                    <p>पिछले 50 रिकॉर्ड के ग्राफ देखें</p>
+                </div>
+                <div class="feature-card glass-card fade-up" style="animation-delay: 0.5s">
+                    <div class="feature-icon">🔐</div>
+                    <h3>सुरक्षित एक्सेस</h3>
+                    <p>किसान, मालिक और एडमिन के लिए अलग-अलग भूमिकाएं</p>
+                </div>
+                <div class="feature-card glass-card fade-up" style="animation-delay: 0.6s">
+                    <div class="feature-icon">📡</div>
+                    <h3>मल्टी-डिवाइस</h3>
+                    <p>एक से अधिक गोदामों की निगरानी एक साथ करें</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it Works -->
+    <section class="how-section" id="how-it-works">
+        <div class="container">
+            <div class="section-header fade-up">
+                <h2 class="section-title">कैसे <span class="gradient-text">काम करता है</span></h2>
+                <p class="section-subtitle">सरल तीन चरणों में अपनी फसल सुरक्षित करें</p>
+            </div>
+            <div class="steps-grid">
+                <div class="step-card fade-up" style="animation-delay: 0.1s">
+                    <div class="step-number">01</div>
+                    <h3>डिवाइस लगाएं</h3>
+                    <p>ESP32 सेंसर को अपने गोदाम में लगाएं</p>
+                </div>
+                <div class="step-connector fade-up" style="animation-delay: 0.2s">→</div>
+                <div class="step-card fade-up" style="animation-delay: 0.3s">
+                    <div class="step-number">02</div>
+                    <h3>डैशबोर्ड देखें</h3>
+                    <p>रियल-टाइम डेटा अपने फोन या कंप्यूटर पर देखें</p>
+                </div>
+                <div class="step-connector fade-up" style="animation-delay: 0.4s">→</div>
+                <div class="step-card fade-up" style="animation-delay: 0.5s">
+                    <div class="step-number">03</div>
+                    <h3>अलर्ट पाएं</h3>
+                    <p>खतरा होने पर तुरंत WhatsApp अलर्ट पाएं</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <span class="logo-icon">🛡️</span>
+                    <span class="logo-text">Kishan <span class="gradient-text">Kavach</span></span>
+                    <p>किसानों की फसल सुरक्षा का स्मार्ट समाधान</p>
+                </div>
+                <div class="footer-links">
+                    <a href="#features">विशेषताएं</a>
+                    <a href="#how-it-works">कैसे काम करता है</a>
+                    <a href="{{ url_for('login') }}">लॉगिन</a>
+                    <a href="{{ url_for('register') }}">रजिस्टर</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Kishan Kavach. सर्वाधिकार सुरक्षित।</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
