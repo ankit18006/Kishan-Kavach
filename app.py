@@ -1,10 +1,13 @@
 import os
-import json
-import requests
+import requests as http_requests
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_socketio import SocketIO, emit
 from werkzeug.security import generate_password_hash, check_password_hash
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
 
 from database import (
     init_db, get_user_by_email, create_user, get_user_by_id,
@@ -13,27 +16,42 @@ from database import (
     request_access, get_pending_requests, get_approved_farmers,
     update_access_status, revoke_access, get_farmer_approved_devices,
     get_all_owners, get_all_users, delete_user, get_farmer_requests,
-    can_send_alert, log_alert, calculate_spoilage, get_device_by_device_id,
-    admin_remove_device
+    can_send_alert, log_alert, get_device_by_device_id,
+    admin_remove_device, update_user_language, get_first_owner_id
 )
-from auth import login_required, role_required, get_current_user
+from auth import login_required, role_required, get_current_user, get_user_language
+from models import get_translation, get_all_translations, TRANSLATIONS
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'kishan-kavach-secret-key-2024')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'kishan-kavach-prod-secret-2024-xyz')
 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
-# WhatsApp config
-CALLMEBOT_PHONE = os.environ.get('WHATSAPP_PHONE', '+919838794234')
-CALLMEBOT_APIKEY = os.environ.get('WHATSAPP_APIKEY', '')
-WEATHER_API_KEY = os.environ.get('WEATHER_API_KEY', '7f6b21a345966c8abb206599910c8bb5')
+# ===== ENVIRONMENT VARIABLES (from .env or system) =====
+WHATSAPP_PHONE = os.environ.get('WHATSAPP_PHONE', '')
+WHATSAPP_APIKEY = os.environ.get('WHATSAPP_APIKEY', '')
+WEATHER_API_KEY = os.environ.get('WEATHER_API_KEY', '')
+AUTO_REGISTER_DEVICES = os.environ.get('AUTO_REGISTER_DEVICES', 'true').lower() == 'true'
 
+# Initialize database
 init_db()
+
+print("=" * 50)
+print("  KISHAN KAVACH - Configuration Status")
+print("=" * 50)
+print(f"  WhatsApp Phone: {'✅ Set' if WHATSAPP_PHONE else '❌ Not set'}")
+print(f"  WhatsApp API Key: {'✅ Set' if WHATSAPP_APIKEY else '❌ Not set'}")
+print(f"  Weather API Key: {'✅ Set' if WEATHER_API_KEY else '❌ Not set'}")
+print(f"  Auto Register Devices: {'✅ Enabled' if AUTO_REGISTER_DEVICES else '❌ Disabled'}")
+print(f"  Secret Key: {'✅ Custom' if os.environ.get('SECRET_KEY') else '⚠️ Default (change in production!)'}")
+print("=" * 50)
 
 
 def send_whatsapp_alert(device_id, temperature, humidity, gas, spoilage):
-    if not CALLMEBOT_PHONE or not CALLMEBOT_APIKEY:
-        print("[ALERT] WhatsApp not configured. Skipping.")
+    """Send WhatsApp alert via CallMeBot API - ONLY for HIGH spoilage"""
+    if not WHATSAPP_PHONE or not WHATSAPP_APIKEY:
+        print(f"[ALERT] WhatsApp not configured. Skipping alert for {device_id}.")
+        print(f"[ALERT] Set WHATSAPP_PHONE and WHATSAPP_APIKEY in .env file")
         return False
 
     if not can_send_alert(device_id, cooldown_minutes=15):
@@ -42,24 +60,37 @@ def send_whatsapp_alert(device_id, temperature, humidity, gas, spoilage):
 
     message = (
         f"🚨 *Kishan Kavach Alert* 🚨\n\n"
-        f"डिवाइस: {device_id}\n"
-        f"🌡 तापमान: {temperature}°C\n"
-        f"💧 नमी: {humidity}%\n"
-        f"💨 गैस: {gas} PPM\n"
-        f"⚠️ खराब होने का जोखिम: *{spoilage}*\n\n"
-        f"कृपया तुरंत जांच करें!"
+        f"Device: {device_id}\n"
+        f"🌡 Temperature: {temperature}°C\n"
+        f"💧 Humidity: {humidity}%\n"
+        f"💨 Gas: {gas} PPM\n"
+        f"⚠️ Spoilage Risk: *{spoilage}*\n\n"
+        f"Please check immediately!"
     )
 
     try:
-        url = f"https://api.callmebot.com/whatsapp.php?phone={CALLMEBOT_PHONE}&text={requests.utils.quote(message)}&apikey={CALLMEBOT_APIKEY}"
-        resp = requests.get(url, timeout=10)
+        url = (
+            f"https://api.callmebot.com/whatsapp.php"
+            f"?phone={WHATSAPP_PHONE}"
+            f"&text={http_requests.utils.quote(message)}"
+            f"&apikey={WHATSAPP_APIKEY}"
+        )
+        resp = http_requests.get(url, timeout=10)
         if resp.status_code == 200:
             log_alert(device_id, 'HIGH_SPOILAGE', message)
-            print(f"[ALERT] WhatsApp sent for {device_id}")
+            print(f"[ALERT] ✅ WhatsApp alert sent for {device_id}")
             return True
+        else:
+            print(f"[ALERT] ❌ WhatsApp API returned status {resp.status_code}")
     except Exception as e:
-        print(f"[ALERT] WhatsApp failed: {e}")
+        print(f"[ALERT] ❌ WhatsApp failed: {e}")
     return False
+
+
+def t(key):
+    """Shortcut for getting translation based on current user language"""
+    lang = get_user_language()
+    return get_translation(key, lang)
 
 
 # ===== ROUTES =====
@@ -70,11 +101,27 @@ def index():
         user = get_current_user()
         if user:
             return redirect(url_for(f"{user['role']}_dashboard"))
-    return render_template('index.html')
+    lang = session.get('language', 'en')
+    translations = get_all_translations(lang)
+    return render_template('index.html', t=translations, lang=lang)
+
+
+@app.route('/set_language/<lang>')
+def set_language(lang):
+    if lang not in ('en', 'hi'):
+        lang = 'en'
+    session['language'] = lang
+    if 'user_id' in session:
+        update_user_language(session['user_id'], lang)
+    referrer = request.referrer or url_for('index')
+    return redirect(referrer)
 
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    lang = session.get('language', 'en')
+    translations = get_all_translations(lang)
+
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
         email = request.form.get('email', '').strip().lower()
@@ -82,35 +129,40 @@ def register():
         confirm = request.form.get('confirm_password', '')
         role = request.form.get('role', 'farmer')
         phone = request.form.get('phone', '').strip()
+        pref_lang = request.form.get('language', 'en')
 
         if not name or not email or not password:
-            flash('सभी फील्ड भरें', 'danger')
-            return render_template('register.html')
+            flash(translations['fill_all_fields'], 'danger')
+            return render_template('register.html', t=translations, lang=lang)
 
         if password != confirm:
-            flash('पासवर्ड मेल नहीं खाते', 'danger')
-            return render_template('register.html')
+            flash(translations['password_mismatch'], 'danger')
+            return render_template('register.html', t=translations, lang=lang)
 
         if len(password) < 6:
-            flash('पासवर्ड कम से कम 6 अक्षर का होना चाहिए', 'danger')
-            return render_template('register.html')
+            flash(translations['password_min'], 'danger')
+            return render_template('register.html', t=translations, lang=lang)
 
         if role not in ('farmer', 'owner'):
-            flash('अमान्य भूमिका', 'danger')
-            return render_template('register.html')
+            flash(translations['invalid_role'], 'danger')
+            return render_template('register.html', t=translations, lang=lang)
 
         password_hash = generate_password_hash(password)
-        if create_user(name, email, password_hash, role, phone):
-            flash('रजिस्ट्रेशन सफल! कृपया लॉगिन करें', 'success')
+        if create_user(name, email, password_hash, role, phone, pref_lang):
+            session['language'] = pref_lang
+            flash(translations['register_success'], 'success')
             return redirect(url_for('login'))
         else:
-            flash('यह ईमेल पहले से रजिस्टर है', 'danger')
+            flash(translations['email_exists'], 'danger')
 
-    return render_template('register.html')
+    return render_template('register.html', t=translations, lang=lang)
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    lang = session.get('language', 'en')
+    translations = get_all_translations(lang)
+
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
@@ -120,29 +172,34 @@ def login():
             session['user_id'] = user['id']
             session['user_name'] = user['name']
             session['user_role'] = user['role']
-            flash(f'स्वागत है, {user["name"]}!', 'success')
+            session['language'] = user.get('language', 'en')
+            flash(f"{get_translation('login_success', user.get('language', 'en'))}, {user['name']}!", 'success')
             return redirect(url_for(f"{user['role']}_dashboard"))
         else:
-            flash('गलत ईमेल या पासवर्ड', 'danger')
+            flash(translations['wrong_credentials'], 'danger')
 
-    return render_template('login.html')
+    return render_template('login.html', t=translations, lang=lang)
 
 
 @app.route('/logout')
 def logout():
+    lang = session.get('language', 'en')
     session.clear()
-    flash('आप सफलतापूर्वक लॉगआउट हो गए', 'info')
+    session['language'] = lang
+    flash(get_translation('logout_success', lang), 'info')
     return redirect(url_for('index'))
 
 
 # ===== FARMER DASHBOARD =====
-
 @app.route('/farmer')
 @login_required
 def farmer_dashboard():
     user = get_current_user()
-    if user['role'] != 'farmer':
-        return redirect(url_for(f"{user['role']}_dashboard"))
+    if not user or user['role'] != 'farmer':
+        return redirect(url_for('index'))
+
+    lang = user.get('language', 'en')
+    translations = get_all_translations(lang)
 
     approved_devices = get_farmer_approved_devices(user['id'])
     owners = get_all_owners()
@@ -159,17 +216,21 @@ def farmer_dashboard():
                            approved_devices=approved_devices,
                            owners=owners,
                            my_requests=my_requests,
-                           device_data=device_data)
+                           device_data=device_data,
+                           t=translations,
+                           lang=lang)
 
 
 # ===== OWNER DASHBOARD =====
-
 @app.route('/owner')
 @login_required
 def owner_dashboard():
     user = get_current_user()
-    if user['role'] != 'owner':
-        return redirect(url_for(f"{user['role']}_dashboard"))
+    if not user or user['role'] != 'owner':
+        return redirect(url_for('index'))
+
+    lang = user.get('language', 'en')
+    translations = get_all_translations(lang)
 
     devices = get_devices_by_owner(user['id'])
     pending = get_pending_requests(user['id'])
@@ -186,17 +247,21 @@ def owner_dashboard():
                            devices=devices,
                            pending_requests=pending,
                            approved_farmers=approved,
-                           device_data=device_data)
+                           device_data=device_data,
+                           t=translations,
+                           lang=lang)
 
 
 # ===== ADMIN DASHBOARD =====
-
 @app.route('/admin')
 @login_required
 def admin_dashboard():
     user = get_current_user()
-    if user['role'] != 'admin':
-        return redirect(url_for(f"{user['role']}_dashboard"))
+    if not user or user['role'] != 'admin':
+        return redirect(url_for('index'))
+
+    lang = user.get('language', 'en')
+    translations = get_all_translations(lang)
 
     all_users = get_all_users()
     all_devices = get_all_devices()
@@ -211,7 +276,9 @@ def admin_dashboard():
                            user=user,
                            all_users=all_users,
                            all_devices=all_devices,
-                           device_data=device_data)
+                           device_data=device_data,
+                           t=translations,
+                           lang=lang)
 
 
 # ===== API ROUTES =====
@@ -220,18 +287,19 @@ def admin_dashboard():
 @login_required
 def api_request_access():
     user = get_current_user()
+    lang = get_user_language()
     if user['role'] != 'farmer':
-        return jsonify({'error': 'Only farmers can request access'}), 403
+        return redirect(url_for('index'))
 
     owner_id = request.form.get('owner_id')
     if not owner_id:
-        flash('कृपया मालिक चुनें', 'danger')
+        flash(get_translation('select_owner', lang), 'danger')
         return redirect(url_for('farmer_dashboard'))
 
     if request_access(user['id'], int(owner_id)):
-        flash('अनुरोध भेजा गया!', 'success')
+        flash(get_translation('request_sent', lang), 'success')
     else:
-        flash('अनुरोध पहले से मौजूद है', 'warning')
+        flash(get_translation('request_exists', lang), 'warning')
 
     return redirect(url_for('farmer_dashboard'))
 
@@ -240,18 +308,19 @@ def api_request_access():
 @login_required
 def api_approve_access():
     user = get_current_user()
+    lang = get_user_language()
     if user['role'] != 'owner':
-        return jsonify({'error': 'Unauthorized'}), 403
+        return redirect(url_for('index'))
 
     req_id = request.form.get('request_id')
     action = request.form.get('action')
 
     if action == 'approve':
         update_access_status(int(req_id), 'approved')
-        flash('अनुरोध स्वीकार किया', 'success')
+        flash(get_translation('request_approved', lang), 'success')
     elif action == 'reject':
         update_access_status(int(req_id), 'rejected')
-        flash('अनुरोध अस्वीकार किया', 'info')
+        flash(get_translation('request_rejected', lang), 'info')
 
     return redirect(url_for('owner_dashboard'))
 
@@ -260,12 +329,13 @@ def api_approve_access():
 @login_required
 def api_revoke_access():
     user = get_current_user()
+    lang = get_user_language()
     if user['role'] != 'owner':
-        return jsonify({'error': 'Unauthorized'}), 403
+        return redirect(url_for('index'))
 
     access_id = request.form.get('access_id')
     revoke_access(int(access_id))
-    flash('एक्सेस हटा दिया गया', 'info')
+    flash(get_translation('access_revoked', lang), 'info')
     return redirect(url_for('owner_dashboard'))
 
 
@@ -273,21 +343,22 @@ def api_revoke_access():
 @login_required
 def api_add_device():
     user = get_current_user()
+    lang = get_user_language()
     if user['role'] != 'owner':
-        return jsonify({'error': 'Unauthorized'}), 403
+        return redirect(url_for('index'))
 
     device_id = request.form.get('device_id', '').strip()
     name = request.form.get('device_name', 'My Device').strip()
     location = request.form.get('location', '').strip()
 
     if not device_id:
-        flash('डिवाइस ID डालें', 'danger')
+        flash(get_translation('enter_device_id', lang), 'danger')
         return redirect(url_for('owner_dashboard'))
 
     if add_device(device_id, user['id'], name, location):
-        flash('डिवाइस जोड़ा गया!', 'success')
+        flash(get_translation('device_added', lang), 'success')
     else:
-        flash('यह डिवाइस ID पहले से मौजूद है', 'danger')
+        flash(get_translation('device_exists', lang), 'danger')
 
     return redirect(url_for('owner_dashboard'))
 
@@ -296,12 +367,13 @@ def api_add_device():
 @login_required
 def api_remove_device():
     user = get_current_user()
+    lang = get_user_language()
     if user['role'] != 'owner':
-        return jsonify({'error': 'Unauthorized'}), 403
+        return redirect(url_for('index'))
 
     device_id = request.form.get('device_id')
     remove_device(device_id, user['id'])
-    flash('डिवाइस हटा दिया गया', 'info')
+    flash(get_translation('device_removed', lang), 'info')
     return redirect(url_for('owner_dashboard'))
 
 
@@ -309,16 +381,17 @@ def api_remove_device():
 @login_required
 def api_admin_delete_user():
     user = get_current_user()
+    lang = get_user_language()
     if user['role'] != 'admin':
-        return jsonify({'error': 'Unauthorized'}), 403
+        return redirect(url_for('index'))
 
     uid = request.form.get('user_id')
     if int(uid) == user['id']:
-        flash('आप खुद को नहीं हटा सकते', 'danger')
+        flash(get_translation('cannot_delete_self', lang), 'danger')
         return redirect(url_for('admin_dashboard'))
 
     delete_user(int(uid))
-    flash('उपयोगकर्ता हटा दिया गया', 'info')
+    flash(get_translation('user_removed', lang), 'info')
     return redirect(url_for('admin_dashboard'))
 
 
@@ -326,12 +399,13 @@ def api_admin_delete_user():
 @login_required
 def api_admin_remove_device():
     user = get_current_user()
+    lang = get_user_language()
     if user['role'] != 'admin':
-        return jsonify({'error': 'Unauthorized'}), 403
+        return redirect(url_for('index'))
 
     device_id = request.form.get('device_id')
     admin_remove_device(device_id)
-    flash('डिवाइस हटा दिया गया', 'info')
+    flash(get_translation('device_removed', lang), 'info')
     return redirect(url_for('admin_dashboard'))
 
 
@@ -340,7 +414,7 @@ def api_admin_remove_device():
 def api_sensor_history(device_id):
     user = get_current_user()
 
-    # Check authorization
+    # Authorization check
     if user['role'] == 'admin':
         pass
     elif user['role'] == 'owner':
@@ -357,42 +431,6 @@ def api_sensor_history(device_id):
     return jsonify(history)
 
 
-@app.route('/api/weather')
-def api_weather():
-    city = request.args.get('city', 'Mumbai')
-    if not WEATHER_API_KEY:
-        return jsonify({
-            'city': city,
-            'temperature': '--',
-            'humidity': '--',
-            'description': 'API key not configured',
-            'icon': '01d'
-        })
-
-    try:
-        url = f"https://api.openweathermap.org/data/2.5/weather?q={city},IN&appid={WEATHER_API_KEY}&units=metric&lang=hi"
-        resp = requests.get(url, timeout=5)
-        data = resp.json()
-        if data.get('cod') == 200:
-            return jsonify({
-                'city': data['name'],
-                'temperature': round(data['main']['temp'], 1),
-                'humidity': data['main']['humidity'],
-                'description': data['weather'][0]['description'],
-                'icon': data['weather'][0]['icon']
-            })
-    except Exception as e:
-        print(f"Weather API error: {e}")
-
-    return jsonify({
-        'city': city,
-        'temperature': '--',
-        'humidity': '--',
-        'description': 'उपलब्ध नहीं',
-        'icon': '01d'
-    })
-
-
 @app.route('/api/latest_data/<device_id>')
 @login_required
 def api_latest_data(device_id):
@@ -400,6 +438,51 @@ def api_latest_data(device_id):
     if latest:
         return jsonify(latest)
     return jsonify({'error': 'No data'}), 404
+
+
+@app.route('/api/weather')
+def api_weather():
+    city = request.args.get('city', 'Delhi')
+    if not WEATHER_API_KEY:
+        return jsonify({
+            'city': city,
+            'temperature': '--',
+            'humidity': '--',
+            'description': 'API key not configured',
+            'icon': '01d',
+            'configured': False
+        })
+
+    try:
+        lang_param = session.get('language', 'en')
+        if lang_param == 'hi':
+            lang_param = 'hi'
+        url = (
+            f"https://api.openweathermap.org/data/2.5/weather"
+            f"?q={city},IN&appid={WEATHER_API_KEY}&units=metric&lang={lang_param}"
+        )
+        resp = http_requests.get(url, timeout=5)
+        data = resp.json()
+        if data.get('cod') == 200:
+            return jsonify({
+                'city': data['name'],
+                'temperature': round(data['main']['temp'], 1),
+                'humidity': data['main']['humidity'],
+                'description': data['weather'][0]['description'],
+                'icon': data['weather'][0]['icon'],
+                'configured': True
+            })
+    except Exception as e:
+        print(f"[WEATHER] API error: {e}")
+
+    return jsonify({
+        'city': city,
+        'temperature': '--',
+        'humidity': '--',
+        'description': get_translation('not_available', session.get('language', 'en')),
+        'icon': '01d',
+        'configured': bool(WEATHER_API_KEY)
+    })
 
 
 # ===== SOCKET.IO EVENTS =====
@@ -416,6 +499,10 @@ def handle_disconnect():
 
 @socketio.on('iot_data')
 def handle_iot_data(data):
+    """
+    Receives IoT data from ESP32 via Socket.IO
+    Expected JSON: {device_id, temperature, humidity, gas, battery}
+    """
     try:
         device_id = data.get('device_id')
         temperature = float(data.get('temperature', 0))
@@ -427,14 +514,26 @@ def handle_iot_data(data):
             emit('error', {'message': 'device_id required'})
             return
 
-        # Auto-register device if not exists
+        # Check if device exists
         device = get_device_by_device_id(device_id)
-        if not device:
-            print(f"[IOT] Unknown device: {device_id}. Ignoring.")
-            emit('error', {'message': 'Device not registered'})
-            return
 
-        # Store data
+        if not device:
+            # AUTO REGISTER: Register device to first owner
+            if AUTO_REGISTER_DEVICES:
+                first_owner_id = get_first_owner_id()
+                if first_owner_id:
+                    add_device(device_id, first_owner_id, f'Auto-{device_id}', '', auto_registered=1)
+                    print(f"[IOT] ✅ Auto-registered device {device_id} to owner {first_owner_id}")
+                else:
+                    print(f"[IOT] ❌ No owner exists. Cannot auto-register {device_id}.")
+                    emit('error', {'message': 'No owner registered. Create an owner account first.'})
+                    return
+            else:
+                print(f"[IOT] ❌ Unknown device {device_id}. Auto-register disabled.")
+                emit('error', {'message': f'Device {device_id} not registered. Register it first.'})
+                return
+
+        # Store sensor data
         spoilage = insert_sensor_data(device_id, temperature, humidity, gas, battery)
 
         payload = {
@@ -447,20 +546,23 @@ def handle_iot_data(data):
             'timestamp': datetime.now().isoformat()
         }
 
-        # Broadcast to all clients
+        # Broadcast to ALL connected clients
         emit('sensor_update', payload, broadcast=True)
 
-        # WhatsApp alert for HIGH spoilage
+        # WhatsApp alert ONLY for HIGH spoilage
         if spoilage == 'HIGH':
             send_whatsapp_alert(device_id, temperature, humidity, gas, spoilage)
 
-        print(f"[IOT] {device_id}: T={temperature}, H={humidity}, G={gas}, B={battery}, S={spoilage}")
+        print(f"[IOT] {device_id}: T={temperature}°C, H={humidity}%, G={gas}PPM, B={battery}%, S={spoilage}")
 
     except Exception as e:
-        print(f"[IOT] Error: {e}")
+        print(f"[IOT] ❌ Error processing data: {e}")
         emit('error', {'message': str(e)})
 
 
+# ===== START =====
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    socketio.run(app, host='0.0.0.0', port=port, debug=True, allow_unsafe_werkzeug=True)
+    debug = os.environ.get('FLASK_DEBUG', 'true').lower() == 'true'
+    socketio.run(app, host='0.0.0.0', port=port, debug=debug, allow_unsafe_werkzeug=True)
