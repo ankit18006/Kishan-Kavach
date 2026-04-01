@@ -458,54 +458,9 @@ function fetchWeather() {
 }
 
 // ===========================
-// SIMULATE DATA (Owner)
-// ===========================
-function simulateData() {
-    var deviceSelector = document.getElementById('deviceSelector');
-    if (!deviceSelector) return;
-
-    var deviceId = deviceSelector.value;
-    var temp = document.getElementById('simTemp').value || 28;
-    var humidity = document.getElementById('simHumidity').value || 65;
-    var gas = document.getElementById('simGas').value || 300;
-    var battery = document.getElementById('simBattery').value || 85;
-
-    fetch('/api/simulate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            device_id: deviceId,
-            temperature: parseFloat(temp),
-            humidity: parseFloat(humidity),
-            gas: parseFloat(gas),
-            battery: parseFloat(battery)
-        })
-    })
-    .then(function(resp) { return resp.json(); })
-    .then(function(data) {
-        console.log('Simulate response:', data);
-        if (data.status === 'ok') {
-            // Brief success indicator
-            var btn = document.querySelector('.simulate-form .btn');
-            if (btn) {
-                var originalText = btn.textContent;
-                btn.textContent = '✅ भेजा गया!';
-                btn.style.background = 'var(--success)';
-                setTimeout(function() {
-                    btn.textContent = originalText;
-                    btn.style.background = '';
-                }, 1500);
-            }
-        }
-    })
-    .catch(function(err) { console.error('Simulate error:', err); });
-}
-
-// ===========================
 // UTILITY
 // ===========================
 
 // Make switchSection available globally (for inline onclick handlers)
 window.switchSection = switchSection;
 window.fetchWeather = fetchWeather;
-window.simulateData = simulateData;
