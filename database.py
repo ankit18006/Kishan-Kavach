@@ -25,6 +25,7 @@ def init_db():
             password TEXT NOT NULL,
             role TEXT NOT NULL CHECK(role IN ('farmer', 'owner', 'admin')),
             phone TEXT DEFAULT '',
+            language TEXT DEFAULT 'en',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -36,6 +37,7 @@ def init_db():
             owner_id INTEGER NOT NULL,
             name TEXT DEFAULT 'My Device',
             location TEXT DEFAULT '',
+            auto_registered INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
         )
@@ -51,8 +53,7 @@ def init_db():
             requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             responded_at TIMESTAMP,
             FOREIGN KEY (farmer_id) REFERENCES users(id) ON DELETE CASCADE,
-            FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
-            FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE
+            FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
         )
     ''')
 
@@ -79,24 +80,151 @@ def init_db():
         )
     ''')
 
-    # Create indexes
+    # Indexes for performance
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_sensor_device ON sensor_data(device_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_sensor_timestamp ON sensor_data(timestamp)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_access_farmer ON access_control(farmer_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_access_owner ON access_control(owner_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_devices_owner ON devices(owner_id)')
 
-    # Insert default admin if not exists
+    # Default admin
     cursor.execute("SELECT id FROM users WHERE role='admin' LIMIT 1")
     if not cursor.fetchone():
         from werkzeug.security import generate_password_hash
         cursor.execute(
-            "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
-            ('Admin', 'admin@kishankavach.com', generate_password_hash('admin123'), 'admin')
+            "INSERT INTO users (name, email, password, role, phone) VALUES (?, ?, ?, ?, ?)",
+            ('Admin', 'admin@kishankavach.com', generate_password_hash('admin123'), 'admin', '')
         )
 
     conn.commit()
     conn.close()
 
+
+def calculate_spoilage(temperature, humidity, gas):
+    if temperature > 30 or humidity > 80 or gas > 400:
+        return 'HIGH'
+    elif temperature > 25:
+        return 'MEDIUM'
+    else:
+        return 'LOW'
+
+
+# ===== USER FUNCTIONS =====
+
+def get_user_by_email(email):
+    conn = get_db()
+    user = conn.execute('SELECT * FROM users WHERE email=?', (email,)).fetchone()
+    conn.close()
+    return dict(user) if user else None
+
+
+def get_user_by_id(user_id):
+    conn = get_db()
+    user = conn.execute('SELECT * FROM users WHERE id=?', (user_id,)).fetchone()
+    conn.close()
+    return dict(user) if user else None
+
+
+def create_user(name, email, password_hash, role, phone='', language='en'):
+    conn = get_db()
+    try:
+        conn.execute(
+            'INSERT INTO users (name, email, password, role, phone, language) VALUES (?, ?, ?, ?, ?, ?)',
+            (name, email, password_hash, role, phone, language)
+        )
+        conn.commit()
+        conn.close()
+        return True
+    except sqlite3.IntegrityError:
+        conn.close()
+        return False
+
+
+def update_user_language(user_id, language):
+    conn = get_db()
+    conn.execute('UPDATE users SET language=? WHERE id=?', (language, user_id))
+    conn.commit()
+    conn.close()
+
+
+def get_all_users():
+    conn = get_db()
+    rows = conn.execute("SELECT id, name, email, role, phone, language, created_at FROM users").fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def delete_user(user_id):
+    conn = get_db()
+    conn.execute('DELETE FROM alert_log WHERE device_id IN (SELECT device_id FROM devices WHERE owner_id=?)', (user_id,))
+    conn.execute('DELETE FROM sensor_data WHERE device_id IN (SELECT device_id FROM devices WHERE owner_id=?)', (user_id,))
+    conn.execute('DELETE FROM access_control WHERE farmer_id=? OR owner_id=?', (user_id, user_id))
+    conn.execute('DELETE FROM devices WHERE owner_id=?', (user_id,))
+    conn.execute('DELETE FROM users WHERE id=?', (user_id,))
+    conn.commit()
+    conn.close()
+
+
+# ===== DEVICE FUNCTIONS =====
+
+def get_device_by_device_id(device_id):
+    conn = get_db()
+    row = conn.execute('SELECT * FROM devices WHERE device_id=?', (device_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def get_devices_by_owner(owner_id):
+    conn = get_db()
+    rows = conn.execute('SELECT * FROM devices WHERE owner_id=?', (owner_id,)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_all_devices():
+    conn = get_db()
+    rows = conn.execute('''
+        SELECT d.*, u.name as owner_name
+        FROM devices d JOIN users u ON d.owner_id = u.id
+    ''').fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def add_device(device_id, owner_id, name='My Device', location='', auto_registered=0):
+    conn = get_db()
+    try:
+        conn.execute(
+            'INSERT INTO devices (device_id, owner_id, name, location, auto_registered) VALUES (?, ?, ?, ?, ?)',
+            (device_id, owner_id, name, location, auto_registered)
+        )
+        conn.commit()
+        conn.close()
+        return True
+    except sqlite3.IntegrityError:
+        conn.close()
+        return False
+
+
+def remove_device(device_id, owner_id):
+    conn = get_db()
+    conn.execute('DELETE FROM sensor_data WHERE device_id=?', (device_id,))
+    conn.execute('DELETE FROM alert_log WHERE device_id=?', (device_id,))
+    conn.execute('DELETE FROM devices WHERE device_id=? AND owner_id=?', (device_id, owner_id))
+    conn.commit()
+    conn.close()
+
+
+def admin_remove_device(device_id_str):
+    conn = get_db()
+    conn.execute('DELETE FROM sensor_data WHERE device_id=?', (device_id_str,))
+    conn.execute('DELETE FROM alert_log WHERE device_id=?', (device_id_str,))
+    conn.execute('DELETE FROM devices WHERE device_id=?', (device_id_str,))
+    conn.commit()
+    conn.close()
+
+
+# ===== SENSOR DATA FUNCTIONS =====
 
 def insert_sensor_data(device_id, temperature, humidity, gas, battery):
     spoilage = calculate_spoilage(temperature, humidity, gas)
@@ -109,15 +237,6 @@ def insert_sensor_data(device_id, temperature, humidity, gas, battery):
     conn.commit()
     conn.close()
     return spoilage
-
-
-def calculate_spoilage(temperature, humidity, gas):
-    if temperature > 30 or humidity > 80 or gas > 400:
-        return 'HIGH'
-    elif temperature > 25:
-        return 'MEDIUM'
-    else:
-        return 'LOW'
 
 
 def get_latest_sensor_data(device_id):
@@ -140,75 +259,9 @@ def get_sensor_history(device_id, limit=50):
     return [dict(r) for r in rows]
 
 
-def get_user_by_email(email):
-    conn = get_db()
-    user = conn.execute('SELECT * FROM users WHERE email=?', (email,)).fetchone()
-    conn.close()
-    return dict(user) if user else None
+# ===== ACCESS CONTROL FUNCTIONS =====
 
-
-def get_user_by_id(user_id):
-    conn = get_db()
-    user = conn.execute('SELECT * FROM users WHERE id=?', (user_id,)).fetchone()
-    conn.close()
-    return dict(user) if user else None
-
-
-def create_user(name, email, password_hash, role, phone=''):
-    conn = get_db()
-    try:
-        conn.execute(
-            'INSERT INTO users (name, email, password, role, phone) VALUES (?, ?, ?, ?, ?)',
-            (name, email, password_hash, role, phone)
-        )
-        conn.commit()
-        conn.close()
-        return True
-    except sqlite3.IntegrityError:
-        conn.close()
-        return False
-
-
-def get_devices_by_owner(owner_id):
-    conn = get_db()
-    rows = conn.execute('SELECT * FROM devices WHERE owner_id=?', (owner_id,)).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
-
-
-def get_all_devices():
-    conn = get_db()
-    rows = conn.execute('''
-        SELECT d.*, u.name as owner_name
-        FROM devices d JOIN users u ON d.owner_id = u.id
-    ''').fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
-
-
-def add_device(device_id, owner_id, name='My Device', location=''):
-    conn = get_db()
-    try:
-        conn.execute(
-            'INSERT INTO devices (device_id, owner_id, name, location) VALUES (?, ?, ?, ?)',
-            (device_id, owner_id, name, location)
-        )
-        conn.commit()
-        conn.close()
-        return True
-    except sqlite3.IntegrityError:
-        conn.close()
-        return False
-
-
-def remove_device(device_id, owner_id):
-    conn = get_db()
-    conn.execute('DELETE FROM devices WHERE device_id=? AND owner_id=?', (device_id, owner_id))
-    conn.commit()
-    conn.close()
-
-
-def request_access(farmer_id, owner_id, device_id=None):
+def request_access(farmer_id, owner_id):
     conn = get_db()
     existing = conn.execute(
         'SELECT id FROM access_control WHERE farmer_id=? AND owner_id=? AND status IN ("pending","approved")',
@@ -218,8 +271,8 @@ def request_access(farmer_id, owner_id, device_id=None):
         conn.close()
         return False
     conn.execute(
-        'INSERT INTO access_control (farmer_id, owner_id, device_id, status) VALUES (?, ?, ?, ?)',
-        (farmer_id, owner_id, device_id, 'pending')
+        'INSERT INTO access_control (farmer_id, owner_id, status) VALUES (?, ?, ?)',
+        (farmer_id, owner_id, 'pending')
     )
     conn.commit()
     conn.close()
@@ -229,7 +282,7 @@ def request_access(farmer_id, owner_id, device_id=None):
 def get_pending_requests(owner_id):
     conn = get_db()
     rows = conn.execute('''
-        SELECT ac.*, u.name as farmer_name, u.email as farmer_email
+        SELECT ac.*, u.name as farmer_name, u.email as farmer_email, u.phone as farmer_phone
         FROM access_control ac
         JOIN users u ON ac.farmer_id = u.id
         WHERE ac.owner_id=? AND ac.status='pending'
@@ -280,29 +333,6 @@ def get_farmer_approved_devices(farmer_id):
     return [dict(r) for r in rows]
 
 
-def get_all_owners():
-    conn = get_db()
-    rows = conn.execute("SELECT id, name, email FROM users WHERE role='owner'").fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
-
-
-def get_all_users():
-    conn = get_db()
-    rows = conn.execute("SELECT id, name, email, role, created_at FROM users").fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
-
-
-def delete_user(user_id):
-    conn = get_db()
-    conn.execute('DELETE FROM access_control WHERE farmer_id=? OR owner_id=?', (user_id, user_id))
-    conn.execute('DELETE FROM devices WHERE owner_id=?', (user_id,))
-    conn.execute('DELETE FROM users WHERE id=?', (user_id,))
-    conn.commit()
-    conn.close()
-
-
 def get_farmer_requests(farmer_id):
     conn = get_db()
     rows = conn.execute('''
@@ -316,6 +346,15 @@ def get_farmer_requests(farmer_id):
     return [dict(r) for r in rows]
 
 
+def get_all_owners():
+    conn = get_db()
+    rows = conn.execute("SELECT id, name, email FROM users WHERE role='owner'").fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+# ===== ALERT FUNCTIONS =====
+
 def can_send_alert(device_id, cooldown_minutes=15):
     conn = get_db()
     row = conn.execute(
@@ -327,9 +366,12 @@ def can_send_alert(device_id, cooldown_minutes=15):
     conn.close()
     if not row:
         return True
-    last_sent = datetime.fromisoformat(row['sent_at'])
-    diff = (datetime.now() - last_sent).total_seconds() / 60
-    return diff >= cooldown_minutes
+    try:
+        last_sent = datetime.fromisoformat(row['sent_at'])
+        diff = (datetime.now() - last_sent).total_seconds() / 60
+        return diff >= cooldown_minutes
+    except Exception:
+        return True
 
 
 def log_alert(device_id, alert_type, message=''):
@@ -342,16 +384,8 @@ def log_alert(device_id, alert_type, message=''):
     conn.close()
 
 
-def get_device_by_device_id(device_id):
+def get_first_owner_id():
     conn = get_db()
-    row = conn.execute('SELECT * FROM devices WHERE device_id=?', (device_id,)).fetchone()
+    row = conn.execute("SELECT id FROM users WHERE role='owner' ORDER BY id LIMIT 1").fetchone()
     conn.close()
-    return dict(row) if row else None
-
-
-def admin_remove_device(device_id_str):
-    conn = get_db()
-    conn.execute('DELETE FROM sensor_data WHERE device_id=?', (device_id_str,))
-    conn.execute('DELETE FROM devices WHERE device_id=?', (device_id_str,))
-    conn.commit()
-    conn.close()
+    return row['id'] if row else None
