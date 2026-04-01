@@ -1,56 +1,359 @@
-from dataclasses import dataclass
-from datetime import datetime
-from typing import Optional
+"""
+Data models for Kishan Kavach
+These define the structure for reference - actual data uses SQLite dicts
+"""
 
 
-@dataclass
-class User:
-    id: int
-    name: str
-    email: str
-    password: str
-    role: str
-    phone: str = ''
-    created_at: Optional[str] = None
+class UserRoles:
+    FARMER = 'farmer'
+    OWNER = 'owner'
+    ADMIN = 'admin'
+
+    @staticmethod
+    def get_all():
+        return ['farmer', 'owner', 'admin']
+
+    @staticmethod
+    def get_registrable():
+        return ['farmer', 'owner']
 
 
-@dataclass
-class Device:
-    id: int
-    device_id: str
-    owner_id: int
-    name: str = 'My Device'
-    location: str = ''
-    created_at: Optional[str] = None
+class SpoilageLevels:
+    LOW = 'LOW'
+    MEDIUM = 'MEDIUM'
+    HIGH = 'HIGH'
+
+    @staticmethod
+    def get_label(level, language='en'):
+        labels = {
+            'en': {
+                'LOW': 'Safe',
+                'MEDIUM': 'Medium Risk',
+                'HIGH': 'High Danger'
+            },
+            'hi': {
+                'LOW': 'सुरक्षित',
+                'MEDIUM': 'मध्यम जोखिम',
+                'HIGH': 'उच्च खतरा'
+            }
+        }
+        lang_labels = labels.get(language, labels['en'])
+        return lang_labels.get(level, level)
 
 
-@dataclass
-class AccessControl:
-    id: int
-    farmer_id: int
-    owner_id: int
-    device_id: Optional[int]
-    status: str = 'pending'
-    requested_at: Optional[str] = None
-    responded_at: Optional[str] = None
+class AccessStatus:
+    PENDING = 'pending'
+    APPROVED = 'approved'
+    REJECTED = 'rejected'
 
 
-@dataclass
-class SensorData:
-    id: int
-    device_id: str
-    temperature: float
-    humidity: float
-    gas: float
-    battery: float
-    spoilage_level: str = 'LOW'
-    timestamp: Optional[str] = None
+# Translation dictionary
+TRANSLATIONS = {
+    'en': {
+        'app_name': 'Kishan Kavach',
+        'temperature': 'Temperature',
+        'humidity': 'Humidity',
+        'gas_level': 'Gas Level',
+        'battery': 'Battery',
+        'spoilage_risk': 'Spoilage Risk',
+        'dashboard': 'Dashboard',
+        'devices': 'Devices',
+        'requests': 'Requests',
+        'logout': 'Logout',
+        'login': 'Login',
+        'register': 'Register',
+        'weather': 'Weather',
+        'users': 'Users',
+        'farmer': 'Farmer',
+        'owner': 'Warehouse Owner',
+        'admin': 'Admin',
+        'farmer_dashboard': 'Farmer Dashboard',
+        'owner_dashboard': 'Owner Dashboard',
+        'admin_dashboard': 'Admin Dashboard',
+        'live_data': 'Live Data',
+        'data_graph': 'Data Graph (Last 50 Records)',
+        'no_access': 'No Access',
+        'no_access_msg': 'You don\'t have access to any device yet. Please send an access request to a warehouse owner.',
+        'send_request': 'Send Request',
+        'my_approved_devices': 'My Approved Devices',
+        'device_id': 'Device ID',
+        'owner_name': 'Owner',
+        'status': 'Status',
+        'approved': 'Approved',
+        'pending': 'Pending',
+        'rejected': 'Rejected',
+        'send_new_request': 'Send New Request',
+        'select_owner': 'Select Owner',
+        'my_requests': 'My Requests',
+        'date': 'Date',
+        'no_requests': 'No requests sent yet',
+        'city_name': 'City Name',
+        'check_weather': 'Check',
+        'weather_info': 'Weather Information',
+        'add_new_device': 'Add New Device',
+        'device_name': 'Name',
+        'location': 'Location',
+        'add': 'Add',
+        'action': 'Action',
+        'remove': 'Remove',
+        'no_devices': 'No Devices',
+        'no_devices_msg': 'Please add a device first.',
+        'add_device_link': 'Add Device',
+        'farmer_requests': 'Farmer Requests',
+        'pending_requests': 'Pending Requests',
+        'farmer_name': 'Farmer',
+        'email': 'Email',
+        'approve': 'Approve',
+        'reject': 'Reject',
+        'no_pending': 'No pending requests',
+        'approved_farmers': 'Approved Farmers',
+        'revoke_access': 'Revoke Access',
+        'no_approved': 'No approved farmers',
+        'all_users': 'All Users',
+        'all_devices': 'All Devices',
+        'total_users': 'Total Users',
+        'total_devices': 'Total Devices',
+        'farmers_count': 'Farmers',
+        'owners_count': 'Owners',
+        'role': 'Role',
+        'delete': 'Delete',
+        'name': 'Name',
+        'password': 'Password',
+        'confirm_password': 'Confirm Password',
+        'phone': 'Phone Number',
+        'select_role': 'Select Role',
+        'select_language': 'Language',
+        'register_success': 'Registration successful! Please login.',
+        'login_success': 'Welcome',
+        'wrong_credentials': 'Wrong email or password',
+        'email_exists': 'This email is already registered',
+        'fill_all_fields': 'Please fill all fields',
+        'password_mismatch': 'Passwords do not match',
+        'password_min': 'Password must be at least 6 characters',
+        'invalid_role': 'Invalid role',
+        'please_login': 'Please login first',
+        'no_permission': 'You do not have permission',
+        'logout_success': 'Logged out successfully',
+        'request_sent': 'Request sent!',
+        'request_exists': 'Request already exists',
+        'request_approved': 'Request approved',
+        'request_rejected': 'Request rejected',
+        'access_revoked': 'Access revoked',
+        'device_added': 'Device added!',
+        'device_exists': 'This device ID already exists',
+        'enter_device_id': 'Enter device ID',
+        'device_removed': 'Device removed',
+        'user_removed': 'User removed',
+        'cannot_delete_self': 'You cannot delete yourself',
+        'hero_title': 'Smart Storage Monitoring for Farmers',
+        'hero_subtitle': 'Protect your warehouse crops from spoilage. Monitor temperature, humidity and gas in real-time. Get instant alerts.',
+        'get_started': 'Get Started',
+        'learn_more': 'Learn More',
+        'monitoring_24x7': '24/7 Monitoring',
+        'instant_alerts': 'Instant WhatsApp Alerts',
+        'secure': 'Secure',
+        'features': 'Features',
+        'features_subtitle': 'Built for farmers, designed for farmers',
+        'feature_realtime': 'Real-time Dashboard',
+        'feature_realtime_desc': 'Monitor temperature, humidity, gas and battery live',
+        'feature_whatsapp': 'WhatsApp Alerts',
+        'feature_whatsapp_desc': 'Get instant notification on WhatsApp when danger is detected',
+        'feature_weather': 'Weather Info',
+        'feature_weather_desc': 'Check your area weather and make right decisions',
+        'feature_graph': 'Graphs & History',
+        'feature_graph_desc': 'View graphs of last 50 records',
+        'feature_security': 'Secure Access',
+        'feature_security_desc': 'Separate roles for farmer, owner and admin',
+        'feature_multidevice': 'Multi-Device',
+        'feature_multidevice_desc': 'Monitor multiple warehouses at once',
+        'how_it_works': 'How It Works',
+        'how_subtitle': 'Protect your crops in three simple steps',
+        'step1_title': 'Install Device',
+        'step1_desc': 'Install ESP32 sensor in your warehouse',
+        'step2_title': 'View Dashboard',
+        'step2_desc': 'View real-time data on your phone or computer',
+        'step3_title': 'Get Alerts',
+        'step3_desc': 'Get instant WhatsApp alerts when danger is detected',
+        'footer_tagline': 'Smart solution for crop safety of farmers',
+        'all_rights': 'All rights reserved.',
+        'smart_tech': 'Smart Technology for Farmers',
+        'confirm_delete_device': 'Are you sure you want to remove this device?',
+        'confirm_delete_user': 'Are you sure you want to remove this user?',
+        'confirm_revoke': 'Are you sure you want to revoke access?',
+        'home': 'Home',
+        'safe': 'Safe',
+        'normal': 'Normal',
+        'warning': 'Warning',
+        'good': 'Good',
+        'not_available': 'Not available',
+        'auto_register_note': 'New ESP32 devices will be auto-registered to the first owner.',
+        'language_changed': 'Language changed',
+        'go_home': 'Go to Home',
+        'no_account': "Don't have an account?",
+        'have_account': 'Already have an account?',
+        'create_account': 'Create New Account',
+        'login_to_account': 'Login to your account',
+        'select_owner_placeholder': '-- Select Owner --',
+        'eg_delhi': 'e.g. Delhi, Mumbai',
+        'eg_device': 'e.g. ESP32_001',
+        'eg_warehouse': 'Warehouse 1',
+    },
+    'hi': {
+        'app_name': 'किसान कवच',
+        'temperature': 'तापमान',
+        'humidity': 'नमी',
+        'gas_level': 'गैस स्तर',
+        'battery': 'बैटरी',
+        'spoilage_risk': 'खराब होने का जोखिम',
+        'dashboard': 'डैशबोर्ड',
+        'devices': 'डिवाइस',
+        'requests': 'अनुरोध',
+        'logout': 'लॉगआउट',
+        'login': 'लॉगिन',
+        'register': 'रजिस्टर',
+        'weather': 'मौसम',
+        'users': 'उपयोगकर्ता',
+        'farmer': 'किसान',
+        'owner': 'गोदाम मालिक',
+        'admin': 'एडमिन',
+        'farmer_dashboard': 'किसान डैशबोर्ड',
+        'owner_dashboard': 'गोदाम मालिक डैशबोर्ड',
+        'admin_dashboard': 'एडमिन डैशबोर्ड',
+        'live_data': 'लाइव डेटा',
+        'data_graph': 'डेटा ग्राफ (पिछले 50 रिकॉर्ड)',
+        'no_access': 'कोई एक्सेस नहीं',
+        'no_access_msg': 'आपके पास अभी किसी डिवाइस का एक्सेस नहीं है। कृपया गोदाम मालिक को एक्सेस अनुरोध भेजें।',
+        'send_request': 'अनुरोध भेजें',
+        'my_approved_devices': 'मेरे स्वीकृत डिवाइस',
+        'device_id': 'डिवाइस ID',
+        'owner_name': 'मालिक',
+        'status': 'स्थिति',
+        'approved': 'स्वीकृत',
+        'pending': 'लंबित',
+        'rejected': 'अस्वीकृत',
+        'send_new_request': 'नया अनुरोध भेजें',
+        'select_owner': 'गोदाम मालिक चुनें',
+        'my_requests': 'मेरे अनुरोध',
+        'date': 'तारीख',
+        'no_requests': 'कोई अनुरोध नहीं भेजा गया',
+        'city_name': 'शहर का नाम',
+        'check_weather': 'देखें',
+        'weather_info': 'मौसम की जानकारी',
+        'add_new_device': 'नया डिवाइस जोड़ें',
+        'device_name': 'नाम',
+        'location': 'स्थान',
+        'add': 'जोड़ें',
+        'action': 'कार्रवाई',
+        'remove': 'हटाएं',
+        'no_devices': 'कोई डिवाइस नहीं',
+        'no_devices_msg': 'कृपया पहले एक डिवाइस जोड़ें।',
+        'add_device_link': 'डिवाइस जोड़ें',
+        'farmer_requests': 'किसान अनुरोध',
+        'pending_requests': 'लंबित अनुरोध',
+        'farmer_name': 'किसान',
+        'email': 'ईमेल',
+        'approve': 'स्वीकार',
+        'reject': 'अस्वीकार',
+        'no_pending': 'कोई लंबित अनुरोध नहीं',
+        'approved_farmers': 'स्वीकृत किसान',
+        'revoke_access': 'एक्सेस हटाएं',
+        'no_approved': 'कोई स्वीकृत किसान नहीं',
+        'all_users': 'सभी उपयोगकर्ता',
+        'all_devices': 'सभी डिवाइस',
+        'total_users': 'कुल उपयोगकर्ता',
+        'total_devices': 'कुल डिवाइस',
+        'farmers_count': 'किसान',
+        'owners_count': 'मालिक',
+        'role': 'भूमिका',
+        'delete': 'हटाएं',
+        'name': 'नाम',
+        'password': 'पासवर्ड',
+        'confirm_password': 'पासवर्ड पुष्टि',
+        'phone': 'फोन नंबर',
+        'select_role': 'भूमिका चुनें',
+        'select_language': 'भाषा',
+        'register_success': 'रजिस्ट्रेशन सफल! कृपया लॉगिन करें।',
+        'login_success': 'स्वागत है',
+        'wrong_credentials': 'गलत ईमेल या पासवर्ड',
+        'email_exists': 'यह ईमेल पहले से रजिस्टर है',
+        'fill_all_fields': 'सभी फील्ड भरें',
+        'password_mismatch': 'पासवर्ड मेल नहीं खाते',
+        'password_min': 'पासवर्ड कम से कम 6 अक्षर का होना चाहिए',
+        'invalid_role': 'अमान्य भूमिका',
+        'please_login': 'कृपया पहले लॉगिन करें',
+        'no_permission': 'आपको इस पेज की अनुमति नहीं है',
+        'logout_success': 'आप सफलतापूर्वक लॉगआउट हो गए',
+        'request_sent': 'अनुरोध भेजा गया!',
+        'request_exists': 'अनुरोध पहले से मौजूद है',
+        'request_approved': 'अनुरोध स्वीकार किया',
+        'request_rejected': 'अनुरोध अस्वीकार किया',
+        'access_revoked': 'एक्सेस हटा दिया गया',
+        'device_added': 'डिवाइस जोड़ा गया!',
+        'device_exists': 'यह डिवाइस ID पहले से मौजूद है',
+        'enter_device_id': 'डिवाइस ID डालें',
+        'device_removed': 'डिवाइस हटा दिया गया',
+        'user_removed': 'उपयोगकर्ता हटा दिया गया',
+        'cannot_delete_self': 'आप खुद को नहीं हटा सकते',
+        'hero_title': 'किसानों के लिए स्मार्ट भंडारण निगरानी',
+        'hero_subtitle': 'अपने गोदाम की फसल को खराब होने से बचाएं। तापमान, नमी और गैस की रियल-टाइम निगरानी करें। तुरंत अलर्ट पाएं।',
+        'get_started': 'अभी शुरू करें',
+        'learn_more': 'और जानें',
+        'monitoring_24x7': '24/7 निगरानी',
+        'instant_alerts': 'तुरंत WhatsApp अलर्ट',
+        'secure': 'सुरक्षित',
+        'features': 'विशेषताएं',
+        'features_subtitle': 'किसानों के लिए बनाया गया, किसानों के लिए डिज़ाइन किया गया',
+        'feature_realtime': 'रियल-टाइम डैशबोर्ड',
+        'feature_realtime_desc': 'तापमान, नमी, गैस और बैटरी की लाइव निगरानी करें',
+        'feature_whatsapp': 'WhatsApp अलर्ट',
+        'feature_whatsapp_desc': 'खतरा होने पर तुरंत WhatsApp पर सूचना पाएं',
+        'feature_weather': 'मौसम की जानकारी',
+        'feature_weather_desc': 'अपने क्षेत्र का मौसम देखें और सही निर्णय लें',
+        'feature_graph': 'ग्राफ और इतिहास',
+        'feature_graph_desc': 'पिछले 50 रिकॉर्ड के ग्राफ देखें',
+        'feature_security': 'सुरक्षित एक्सेस',
+        'feature_security_desc': 'किसान, मालिक और एडमिन के लिए अलग-अलग भूमिकाएं',
+        'feature_multidevice': 'मल्टी-डिवाइस',
+        'feature_multidevice_desc': 'एक से अधिक गोदामों की निगरानी एक साथ करें',
+        'how_it_works': 'कैसे काम करता है',
+        'how_subtitle': 'सरल तीन चरणों में अपनी फसल सुरक्षित करें',
+        'step1_title': 'डिवाइस लगाएं',
+        'step1_desc': 'ESP32 सेंसर को अपने गोदाम में लगाएं',
+        'step2_title': 'डैशबोर्ड देखें',
+        'step2_desc': 'रियल-टाइम डेटा अपने फोन या कंप्यूटर पर देखें',
+        'step3_title': 'अलर्ट पाएं',
+        'step3_desc': 'खतरा होने पर तुरंत WhatsApp अलर्ट पाएं',
+        'footer_tagline': 'किसानों की फसल सुरक्षा का स्मार्ट समाधान',
+        'all_rights': 'सर्वाधिकार सुरक्षित।',
+        'smart_tech': 'किसानों के लिए स्मार्ट तकनीक',
+        'confirm_delete_device': 'क्या आप इस डिवाइस को हटाना चाहते हैं?',
+        'confirm_delete_user': 'क्या आप इस उपयोगकर्ता को हटाना चाहते हैं?',
+        'confirm_revoke': 'क्या आप एक्सेस हटाना चाहते हैं?',
+        'home': 'होम',
+        'safe': 'सुरक्षित',
+        'normal': 'सामान्य',
+        'warning': 'चेतावनी',
+        'good': 'अच्छी',
+        'not_available': 'उपलब्ध नहीं',
+        'auto_register_note': 'नए ESP32 डिवाइस पहले मालिक के पास ऑटो-रजिस्टर होंगे।',
+        'language_changed': 'भाषा बदल दी गई',
+        'go_home': 'होम पेज पर जाएं',
+        'no_account': 'अकाउंट नहीं है?',
+        'have_account': 'पहले से अकाउंट है?',
+        'create_account': 'नया अकाउंट बनाएं',
+        'login_to_account': 'अपने अकाउंट में लॉगिन करें',
+        'select_owner_placeholder': '-- मालिक चुनें --',
+        'eg_delhi': 'जैसे: Delhi, Mumbai',
+        'eg_device': 'जैसे: ESP32_001',
+        'eg_warehouse': 'गोदाम 1',
+    }
+}
 
 
-@dataclass
-class AlertLog:
-    id: int
-    device_id: str
-    alert_type: str
-    message: str = ''
-    sent_at: Optional[str] = None
+def get_translation(key, language='en'):
+    lang_dict = TRANSLATIONS.get(language, TRANSLATIONS['en'])
+    return lang_dict.get(key, TRANSLATIONS['en'].get(key, key))
+
+
+def get_all_translations(language='en'):
+    return TRANSLATIONS.get(language, TRANSLATIONS['en'])
