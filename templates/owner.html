@@ -12,6 +12,12 @@
 </head>
 <body class="dashboard-page">
     <!-- Sidebar -->
+
+    <select onchange="setLanguage(this.value)" class="lang-select">
+    <option value="hi">🇮🇳 हिंदी</option>
+    <option value="en">🇬🇧 English</option>
+    </select>
+    
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <span class="logo-icon">🛡️</span>
@@ -119,32 +125,7 @@
                 <h3>📈 डेटा ग्राफ (पिछले 50 रिकॉर्ड)</h3>
                 <canvas id="sensorChart"></canvas>
             </div>
-
-            <!-- Simulate Data (for testing) -->
-            <div class="form-card glass-card" style="margin-top: 1.5rem;">
-                <h4>🧪 टेस्ट डेटा भेजें (Simulate)</h4>
-                <div class="simulate-form">
-                    <div class="sim-row">
-                        <div class="form-group">
-                            <label>🌡 तापमान (°C)</label>
-                            <input type="number" id="simTemp" value="28" step="0.1">
-                        </div>
-                        <div class="form-group">
-                            <label>💧 नमी (%)</label>
-                            <input type="number" id="simHumidity" value="65" step="0.1">
-                        </div>
-                        <div class="form-group">
-                            <label>💨 गैस (PPM)</label>
-                            <input type="number" id="simGas" value="300" step="1">
-                        </div>
-                        <div class="form-group">
-                            <label>🔋 बैटरी (%)</label>
-                            <input type="number" id="simBattery" value="85" step="1">
-                        </div>
-                    </div>
-                    <button class="btn btn-gradient" onclick="simulateData()">डेटा भेजें</button>
-                </div>
-            </div>
+            
             {% else %}
             <div class="empty-state glass-card">
                 <div class="empty-icon">📡</div>
