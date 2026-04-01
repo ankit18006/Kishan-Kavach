@@ -2,14 +2,15 @@
 
 document.addEventListener("DOMContentLoaded", function () {
     const lang = localStorage.getItem("lang") || "hi";
+    updateChartLanguage();
     setLanguage(lang);
-});
 
-document.addEventListener('DOMContentLoaded', function() {
-    // ===== LANDING PAGE LOGIC =====
+    const langSelect = document.querySelector('.lang-select');
+    if (langSelect) {
+        langSelect.value = lang;
+    }
+
     initLandingPage();
-
-    // ===== DASHBOARD LOGIC =====
     initDashboard();
 });
 
@@ -311,9 +312,32 @@ function loadDeviceData(deviceId) {
 // ===========================
 // CHART
 // ===========================
+
+function getChartLabels() {
+    const lang = localStorage.getItem("lang") || "hi";
+
+    if (lang === "hi") {
+        return {
+            temp: "तापमान (°C)",
+            humidity: "नमी (%)",
+            gas: "गैस (PPM)",
+            battery: "बैटरी (%)"
+        };
+    } else {
+        return {
+            temp: "Temperature (°C)",
+            humidity: "Humidity (%)",
+            gas: "Gas (PPM)",
+            battery: "Battery (%)"
+        };
+    }
+}
+
 function initChart() {
     const canvas = document.getElementById('sensorChart');
     if (!canvas) return;
+
+    const labelsText = getChartLabels();
 
     const ctx = canvas.getContext('2d');
     sensorChart = new Chart(ctx, {
@@ -322,48 +346,44 @@ function initChart() {
             labels: [],
             datasets: [
                 {
-                    label: 'तापमान (°C)',
+                    label: labelsText.temp,
                     data: [],
                     borderColor: '#ef4444',
                     backgroundColor: 'rgba(239, 68, 68, 0.1)',
                     borderWidth: 2,
                     tension: 0.4,
                     fill: false,
-                    pointRadius: 2,
-                    pointHoverRadius: 5
+                    pointRadius: 2
                 },
                 {
-                    label: 'नमी (%)',
+                    label: labelsText.humidity,
                     data: [],
                     borderColor: '#3b82f6',
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
                     borderWidth: 2,
                     tension: 0.4,
                     fill: false,
-                    pointRadius: 2,
-                    pointHoverRadius: 5
+                    pointRadius: 2
                 },
                 {
-                    label: 'गैस (PPM)',
+                    label: labelsText.gas,
                     data: [],
                     borderColor: '#f59e0b',
                     backgroundColor: 'rgba(245, 158, 11, 0.1)',
                     borderWidth: 2,
                     tension: 0.4,
                     fill: false,
-                    pointRadius: 2,
-                    pointHoverRadius: 5
+                    pointRadius: 2
                 },
                 {
-                    label: 'बैटरी (%)',
+                    label: labelsText.battery,
                     data: [],
                     borderColor: '#22c55e',
                     backgroundColor: 'rgba(34, 197, 94, 0.1)',
                     borderWidth: 2,
                     tension: 0.4,
                     fill: false,
-                    pointRadius: 2,
-                    pointHoverRadius: 5
+                    pointRadius: 2
                 }
             ]
         },
@@ -377,42 +397,7 @@ function initChart() {
             plugins: {
                 legend: {
                     labels: {
-                        color: '#8b949e',
-                        font: { family: 'Poppins', size: 12 },
-                        padding: 16,
-                        usePointStyle: true
-                    }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(22, 27, 34, 0.95)',
-                    titleFont: { family: 'Poppins' },
-                    bodyFont: { family: 'Poppins' },
-                    borderColor: 'rgba(48, 54, 61, 0.6)',
-                    borderWidth: 1,
-                    cornerRadius: 8,
-                    padding: 12
-                }
-            },
-            scales: {
-                x: {
-                    grid: {
-                        color: 'rgba(48, 54, 61, 0.3)',
-                        drawBorder: false
-                    },
-                    ticks: {
-                        color: '#6e7681',
-                        font: { family: 'Poppins', size: 10 },
-                        maxTicksLimit: 10
-                    }
-                },
-                y: {
-                    grid: {
-                        color: 'rgba(48, 54, 61, 0.3)',
-                        drawBorder: false
-                    },
-                    ticks: {
-                        color: '#6e7681',
-                        font: { family: 'Poppins', size: 11 }
+                        color: '#8b949e'
                     }
                 }
             }
@@ -420,50 +405,67 @@ function initChart() {
     });
 }
 
+// 🔄 LANGUAGE CHANGE PE CHART UPDATE
+function updateChartLanguage() {
+    if (!sensorChart) return;
+
+    const labelsText = getChartLabels();
+
+    sensorChart.data.datasets[0].label = labelsText.temp;
+    sensorChart.data.datasets[1].label = labelsText.humidity;
+    sensorChart.data.datasets[2].label = labelsText.gas;
+    sensorChart.data.datasets[3].label = labelsText.battery;
+
+    sensorChart.update();
+}
+
+// ===========================
+// LOAD DATA
+// ===========================
+
 function loadChartData(deviceId) {
     if (!sensorChart) return;
 
     fetch('/api/sensor_history/' + deviceId)
-        .then(function(resp) { return resp.json(); })
-        .then(function(data) {
-            if (Array.isArray(data)) {
-                var labels = [];
-                var temps = [];
-                var humidities = [];
-                var gases = [];
-                var batteries = [];
+        .then(res => res.json())
+        .then(data => {
+            if (!Array.isArray(data)) return;
 
-                data.forEach(function(d) {
-                    var ts = d.timestamp || '';
-                    var time = ts.split('T')[1];
-                    if (time) {
-                        labels.push(time.substring(0, 5));
-                    } else {
-                        labels.push('');
-                    }
-                    temps.push(d.temperature);
-                    humidities.push(d.humidity);
-                    gases.push(d.gas);
-                    batteries.push(d.battery);
-                });
+            let labels = [];
+            let temps = [];
+            let hums = [];
+            let gas = [];
+            let bat = [];
 
-                sensorChart.data.labels = labels;
-                sensorChart.data.datasets[0].data = temps;
-                sensorChart.data.datasets[1].data = humidities;
-                sensorChart.data.datasets[2].data = gases;
-                sensorChart.data.datasets[3].data = batteries;
-                sensorChart.update('none');
-            }
-        })
-        .catch(function(err) { console.error('Error loading chart:', err); });
+            data.forEach(d => {
+                let time = (d.timestamp || '').split('T')[1];
+                labels.push(time ? time.substring(0,5) : '');
+
+                temps.push(d.temperature);
+                hums.push(d.humidity);
+                gas.push(d.gas);
+                bat.push(d.battery);
+            });
+
+            sensorChart.data.labels = labels;
+            sensorChart.data.datasets[0].data = temps;
+            sensorChart.data.datasets[1].data = hums;
+            sensorChart.data.datasets[2].data = gas;
+            sensorChart.data.datasets[3].data = bat;
+
+            sensorChart.update();
+        });
 }
+
+// ===========================
+// REALTIME UPDATE
+// ===========================
 
 function addChartDataPoint(data) {
     if (!sensorChart) return;
 
-    var ts = data.timestamp || new Date().toISOString();
-    var time = ts.split('T')[1];
-    var label = time ? time.substring(0, 5) : '';
+    let time = (data.timestamp || new Date().toISOString()).split('T')[1];
+    let label = time ? time.substring(0,5) : '';
 
     sensorChart.data.labels.push(label);
     sensorChart.data.datasets[0].data.push(data.temperature);
@@ -471,17 +473,13 @@ function addChartDataPoint(data) {
     sensorChart.data.datasets[2].data.push(data.gas);
     sensorChart.data.datasets[3].data.push(data.battery);
 
-    // Keep only last 50
     if (sensorChart.data.labels.length > 50) {
         sensorChart.data.labels.shift();
-        sensorChart.data.datasets.forEach(function(ds) {
-            ds.data.shift();
-        });
+        sensorChart.data.datasets.forEach(ds => ds.data.shift());
     }
 
-    sensorChart.update('none');
+    sensorChart.update();
 }
-
 // ===========================
 // WEATHER
 // ===========================
