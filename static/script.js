@@ -1,5 +1,10 @@
 // ===== KISHAN KAVACH - MAIN SCRIPT =====
 
+document.addEventListener("DOMContentLoaded", function () {
+    const lang = localStorage.getItem("lang") || "hi";
+    setLanguage(lang);
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     // ===== LANDING PAGE LOGIC =====
     initLandingPage();
@@ -8,9 +13,49 @@ document.addEventListener('DOMContentLoaded', function() {
     initDashboard();
 });
 
+
+const translations = {
+    hi: {
+        temp: "तापमान",
+        humidity: "नमी",
+        gas: "गैस स्तर",
+        battery: "बैटरी",
+        spoilage: "खराब होने का जोखिम",
+        dashboard: "डैशबोर्ड",
+        devices: "डिवाइस",
+        requests: "अनुरोध",
+        weather: "मौसम",
+        logout: "लॉगआउट"
+    },
+    en: {
+        temp: "Temperature",
+        humidity: "Humidity",
+        gas: "Gas Level",
+        battery: "Battery",
+        spoilage: "Spoilage Risk",
+        dashboard: "Dashboard",
+        devices: "Devices",
+        requests: "Requests",
+        weather: "Weather",
+        logout: "Logout"
+    }
+};
+
+function setLanguage(lang) {
+    localStorage.setItem("lang", lang);
+
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (translations[lang][key]) {
+            el.textContent = translations[lang][key];
+        }
+    });
+}
+
 // ===========================
 // LANDING PAGE
 // ===========================
+
 function initLandingPage() {
     const navbar = document.getElementById('navbar');
     const mobileToggle = document.getElementById('mobileToggle');
