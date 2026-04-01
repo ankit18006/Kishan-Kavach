@@ -359,7 +359,7 @@ def api_sensor_history(device_id):
 
 @app.route('/api/weather')
 def api_weather():
-    city = request.args.get('city', 'Delhi')
+    city = request.args.get('city', 'Mumbai')
     if not WEATHER_API_KEY:
         return jsonify({
             'city': city,
@@ -459,41 +459,6 @@ def handle_iot_data(data):
     except Exception as e:
         print(f"[IOT] Error: {e}")
         emit('error', {'message': str(e)})
-
-
-# ===== SIMULATE DATA (for testing) =====
-
-@app.route('/api/simulate', methods=['POST'])
-def simulate_data():
-    data = request.get_json() or {}
-    device_id = data.get('device_id', 'ESP32_001')
-    temperature = float(data.get('temperature', 28))
-    humidity = float(data.get('humidity', 65))
-    gas = float(data.get('gas', 300))
-    battery = float(data.get('battery', 85))
-
-    device = get_device_by_device_id(device_id)
-    if not device:
-        return jsonify({'error': 'Device not registered'}), 404
-
-    spoilage = insert_sensor_data(device_id, temperature, humidity, gas, battery)
-
-    payload = {
-        'device_id': device_id,
-        'temperature': temperature,
-        'humidity': humidity,
-        'gas': gas,
-        'battery': battery,
-        'spoilage_level': spoilage,
-        'timestamp': datetime.now().isoformat()
-    }
-
-    socketio.emit('sensor_update', payload)
-
-    if spoilage == 'HIGH':
-        send_whatsapp_alert(device_id, temperature, humidity, gas, spoilage)
-
-    return jsonify({'status': 'ok', 'spoilage': spoilage, 'data': payload})
 
 
 if __name__ == '__main__':
