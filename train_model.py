@@ -1,22 +1,48 @@
 import pandas as pd
-from sklearn.linear_model import LogisticRegression
+import sqlite3
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 import joblib
 
-data = {
-    "temperature": [20,25,30,35,28,32,22,26],
-    "humidity": [50,60,80,90,70,85,55,65],
-    "gas": [100,200,400,600,300,500,150,250],
-    "spoilage": [0,1,2,2,1,2,0,1]
-}
+# 🔥 DB connect
+conn = sqlite3.connect("database.db")
 
-df = pd.DataFrame(data)
+df = pd.read_sql_query("""
+SELECT temperature, humidity, gas, spoilage
+FROM sensor_data
+WHERE spoilage IS NOT NULL
+""", conn)
 
-X = df[["temperature","humidity","gas"]]
-y = df["spoilage"]
+# Convert labels
+df['spoilage'] = df['spoilage'].map({
+    "LOW": 0,
+    "MEDIUM": 1,
+    "HIGH": 2
+})
 
-model = LogisticRegression()
-model.fit(X, y)
+# Features
+X = df[['temperature', 'humidity', 'gas']]
+y = df['spoilage']
 
+# Split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# 🔥 MODEL
+model = RandomForestClassifier(
+    n_estimators=100,
+    max_depth=5
+)
+
+model.fit(X_train, y_train)
+
+# Accuracy check
+pred = model.predict(X_test)
+acc = accuracy_score(y_test, pred)
+
+print(f"🔥 Accuracy: {acc*100:.2f}%")
+
+# Save
 joblib.dump(model, "spoilage_model.pkl")
-
-print("Model trained")
