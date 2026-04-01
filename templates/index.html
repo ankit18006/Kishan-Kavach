@@ -32,6 +32,12 @@
             <a href="{{ url_for('login') }}" class="nav-link">लॉगिन</a>
             <a href="{{ url_for('register') }}" class="btn btn-gradient btn-sm">रजिस्टर करें</a>
         </div>
+
+        <select onchange="setLanguage(this.value)" class="lang-select">
+    <option value="hi">🇮🇳 हिंदी</option>
+    <option value="en">🇬🇧 English</option>
+    </select>
+        
     </nav>
 
     <!-- Hero Section -->
