@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>लॉगिन - Kishan Kavach</title>
+    <title>{{ t.login }} - Kishan Kavach</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -20,8 +20,12 @@
                     <span class="logo-icon">🛡️</span>
                     <span class="logo-text">Kishan <span class="gradient-text">Kavach</span></span>
                 </a>
-                <h2>लॉगिन करें</h2>
-                <p>अपने अकाउंट में लॉगिन करें</p>
+                <div class="lang-switch auth-lang">
+                    <a href="{{ url_for('set_language', lang='en') }}" class="lang-btn {% if lang == 'en' %}active{% endif %}">EN</a>
+                    <a href="{{ url_for('set_language', lang='hi') }}" class="lang-btn {% if lang == 'hi' %}active{% endif %}">हिं</a>
+                </div>
+                <h2>{{ t.login }}</h2>
+                <p>{{ t.login_to_account }}</p>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -34,18 +38,18 @@
 
             <form method="POST" class="auth-form">
                 <div class="form-group">
-                    <label for="email">📧 ईमेल</label>
-                    <input type="email" id="email" name="email" placeholder="अपना ईमेल डालें" required>
+                    <label for="email">📧 {{ t.email }}</label>
+                    <input type="email" id="email" name="email" placeholder="{{ t.email }}" required>
                 </div>
                 <div class="form-group">
-                    <label for="password">🔒 पासवर्ड</label>
-                    <input type="password" id="password" name="password" placeholder="अपना पासवर्ड डालें" required>
+                    <label for="password">🔒 {{ t.password }}</label>
+                    <input type="password" id="password" name="password" placeholder="{{ t.password }}" required>
                 </div>
-                <button type="submit" class="btn btn-gradient btn-full">लॉगिन करें</button>
+                <button type="submit" class="btn btn-gradient btn-full">{{ t.login }}</button>
             </form>
             <div class="auth-footer">
-                <p>अकाउंट नहीं है? <a href="{{ url_for('register') }}" class="gradient-text">रजिस्टर करें</a></p>
-                <a href="/" class="back-link">← होम पेज पर जाएं</a>
+                <p>{{ t.no_account }} <a href="{{ url_for('register') }}" class="gradient-text">{{ t.register }}</a></p>
+                <a href="/" class="back-link">← {{ t.go_home }}</a>
             </div>
         </div>
     </div>
