@@ -36,11 +36,6 @@
                 🚪 लॉगआउट
             </a>
         </div>
-
-    <select onchange="setLanguage(this.value)" class="lang-select">
-    <option value="hi">🇮🇳 हिंदी</option>
-    <option value="en">🇬🇧 English</option>
-    </select>
         
     </aside>
 
@@ -56,6 +51,10 @@
                 <span class="user-role-badge farmer-badge">किसान</span>
                 <span class="user-name">{{ user.name }}</span>
             </div>
+                <select onchange="setLanguage(this.value)" class="lang-select">
+                <option value="hi">🇮🇳 हिंदी</option>
+                <option value="en">🇬🇧 English</option>
+                </select>
         </header>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
