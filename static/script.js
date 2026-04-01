@@ -1,102 +1,81 @@
 // ===== KISHAN KAVACH - MAIN SCRIPT =====
+// No dummy data - Only real data from ESP32 / API
 
-document.addEventListener("DOMContentLoaded", function () {
-    const lang = localStorage.getItem("lang") || "hi";
-    updateChartLanguage();
-    setLanguage(lang);
-
-    const langSelect = document.querySelector('.lang-select');
-    if (langSelect) {
-        langSelect.value = lang;
-    }
-
+document.addEventListener('DOMContentLoaded', function () {
     initLandingPage();
     initDashboard();
 });
 
-
-const translations = {
-    hi: {
-        temp: "तापमान",
-        humidity: "नमी",
-        gas: "गैस स्तर",
-        battery: "बैटरी",
-        spoilage: "खराब होने का जोखिम",
-        dashboard: "डैशबोर्ड",
-        devices: "डिवाइस",
-        requests: "अनुरोध",
-        weather: "मौसम",
-        logout: "लॉगआउट"
-    },
+// ========================
+// TRANSLATIONS FOR JS
+// ========================
+const JS_TRANSLATIONS = {
     en: {
-        temp: "Temperature",
-        humidity: "Humidity",
-        gas: "Gas Level",
-        battery: "Battery",
-        spoilage: "Spoilage Risk",
-        dashboard: "Dashboard",
-        devices: "Devices",
-        requests: "Requests",
-        weather: "Weather",
-        logout: "Logout"
+        safe: '🟢 Safe',
+        medium: '🟡 Medium Risk',
+        high: '🔴 High Danger',
+        temperature: 'Temperature (°C)',
+        humidity: 'Humidity (%)',
+        gas: 'Gas (PPM)',
+        battery: 'Battery (%)',
+        noData: 'No data received yet. Waiting for ESP32...',
+        connected: 'Connected to server',
+        disconnected: 'Disconnected from server'
+    },
+    hi: {
+        safe: '🟢 सुरक्षित',
+        medium: '🟡 मध्यम जोखिम',
+        high: '🔴 उच्च खतरा',
+        temperature: 'तापमान (°C)',
+        humidity: 'नमी (%)',
+        gas: 'गैस (PPM)',
+        battery: 'बैटरी (%)',
+        noData: 'अभी तक कोई डेटा नहीं मिला। ESP32 की प्रतीक्षा...',
+        connected: 'सर्वर से कनेक्टेड',
+        disconnected: 'सर्वर से डिस्कनेक्ट'
     }
 };
 
-function setLanguage(lang) {
-    localStorage.setItem("lang", lang);
-
-    document.querySelectorAll("[data-i18n]").forEach(el => {
-        const key = el.getAttribute("data-i18n");
-        if (translations[lang][key]) {
-            el.textContent = translations[lang][key];
-        }
-    });
+function getLang() {
+    return (typeof USER_LANG !== 'undefined') ? USER_LANG : 'en';
 }
 
-// ===========================
+function jst(key) {
+    var lang = getLang();
+    var dict = JS_TRANSLATIONS[lang] || JS_TRANSLATIONS['en'];
+    return dict[key] || JS_TRANSLATIONS['en'][key] || key;
+}
+
+// ========================
 // LANDING PAGE
-// ===========================
-
+// ========================
 function initLandingPage() {
-    const navbar = document.getElementById('navbar');
-    const mobileToggle = document.getElementById('mobileToggle');
-    const mobileMenu = document.getElementById('mobileMenu');
+    var navbar = document.getElementById('navbar');
+    var mobileToggle = document.getElementById('mobileToggle');
+    var mobileMenu = document.getElementById('mobileMenu');
 
-    // Scroll effect for navbar
     if (navbar) {
-        window.addEventListener('scroll', function() {
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
+        window.addEventListener('scroll', function () {
+            navbar.classList.toggle('scrolled', window.scrollY > 50);
         });
     }
 
-    // Mobile menu toggle
     if (mobileToggle && mobileMenu) {
-        mobileToggle.addEventListener('click', function() {
+        mobileToggle.addEventListener('click', function () {
             mobileMenu.classList.toggle('active');
         });
-
-        // Close mobile menu on link click
-        mobileMenu.querySelectorAll('a').forEach(function(link) {
-            link.addEventListener('click', function() {
+        mobileMenu.querySelectorAll('a').forEach(function (link) {
+            link.addEventListener('click', function () {
                 mobileMenu.classList.remove('active');
             });
         });
     }
 
     // Scroll animations
-    initScrollAnimations();
-}
-
-function initScrollAnimations() {
-    const elements = document.querySelectorAll('.fade-up');
-
-    if ('IntersectionObserver' in window) {
-        const observer = new IntersectionObserver(function(entries) {
-            entries.forEach(function(entry) {
+    var fadeEls = document.querySelectorAll('.fade-up');
+    if ('IntersectionObserver' in window && fadeEls.length > 0) {
+        var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
                 if (entry.isIntersecting) {
                     entry.target.style.animationPlayState = 'running';
                     observer.unobserve(entry.target);
@@ -104,8 +83,7 @@ function initScrollAnimations() {
             });
         }, { threshold: 0.1 });
 
-        elements.forEach(function(el) {
-            // Don't pause if in hero (already visible)
+        fadeEls.forEach(function (el) {
             if (!el.closest('.hero')) {
                 el.style.animationPlayState = 'paused';
             }
@@ -114,50 +92,45 @@ function initScrollAnimations() {
     }
 }
 
-// ===========================
+// ========================
 // DASHBOARD
-// ===========================
-
-let socket = null;
-let sensorChart = null;
-let currentDeviceId = null;
+// ========================
+var socket = null;
+var sensorChart = null;
+var currentDeviceId = null;
 
 function initDashboard() {
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const sidebar = document.getElementById('sidebar');
-    const sidebarLinks = document.querySelectorAll('.sidebar-link');
-    const deviceSelector = document.getElementById('deviceSelector');
+    var sidebarToggle = document.getElementById('sidebarToggle');
+    var sidebar = document.getElementById('sidebar');
+    var sidebarLinks = document.querySelectorAll('.sidebar-link');
+    var deviceSelector = document.getElementById('deviceSelector');
 
-    // Check if we're on dashboard page
     if (!sidebar) return;
 
-    // Create overlay
-    const overlay = document.createElement('div');
+    // Create overlay for mobile
+    var overlay = document.createElement('div');
     overlay.className = 'sidebar-overlay';
     overlay.id = 'sidebarOverlay';
     document.body.appendChild(overlay);
 
-    // Sidebar toggle (mobile)
     if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function() {
+        sidebarToggle.addEventListener('click', function () {
             sidebar.classList.toggle('active');
             overlay.classList.toggle('active');
         });
     }
 
-    overlay.addEventListener('click', function() {
+    overlay.addEventListener('click', function () {
         sidebar.classList.remove('active');
         overlay.classList.remove('active');
     });
 
-    // Sidebar navigation
-    sidebarLinks.forEach(function(link) {
-        link.addEventListener('click', function(e) {
+    // Sidebar nav
+    sidebarLinks.forEach(function (link) {
+        link.addEventListener('click', function (e) {
             e.preventDefault();
-            const section = this.getAttribute('data-section');
+            var section = this.getAttribute('data-section');
             switchSection(section);
-
-            // Close sidebar on mobile
             sidebar.classList.remove('active');
             overlay.classList.remove('active');
         });
@@ -165,13 +138,11 @@ function initDashboard() {
 
     // Device selector
     if (deviceSelector) {
-        deviceSelector.addEventListener('change', function() {
+        deviceSelector.addEventListener('change', function () {
             currentDeviceId = this.value;
             loadDeviceData(currentDeviceId);
             loadChartData(currentDeviceId);
         });
-
-        // Set initial device
         currentDeviceId = deviceSelector.value;
         if (currentDeviceId) {
             loadDeviceData(currentDeviceId);
@@ -179,35 +150,30 @@ function initDashboard() {
         }
     }
 
-    // Initialize Socket.IO
+    // Socket.IO
     initSocket();
 
-    // Initialize chart
+    // Chart
     initChart();
 
-    // Auto-dismiss flash messages
-    setTimeout(function() {
-        document.querySelectorAll('.alert').forEach(function(el) {
+    // Auto dismiss flash
+    setTimeout(function () {
+        document.querySelectorAll('.flash-container .alert').forEach(function (el) {
             el.style.opacity = '0';
-            setTimeout(function() { el.remove(); }, 300);
+            el.style.transition = 'opacity 0.5s';
+            setTimeout(function () { el.remove(); }, 500);
         });
     }, 5000);
 }
 
 function switchSection(sectionName) {
-    // Hide all sections
-    document.querySelectorAll('.content-section').forEach(function(sec) {
+    document.querySelectorAll('.content-section').forEach(function (sec) {
         sec.classList.remove('active');
     });
+    var target = document.getElementById('section-' + sectionName);
+    if (target) target.classList.add('active');
 
-    // Show target section
-    const target = document.getElementById('section-' + sectionName);
-    if (target) {
-        target.classList.add('active');
-    }
-
-    // Update sidebar active state
-    document.querySelectorAll('.sidebar-link').forEach(function(link) {
+    document.querySelectorAll('.sidebar-link').forEach(function (link) {
         link.classList.remove('active');
         if (link.getAttribute('data-section') === sectionName) {
             link.classList.add('active');
@@ -215,47 +181,45 @@ function switchSection(sectionName) {
     });
 }
 
-// ===========================
-// SOCKET.IO
-// ===========================
+// ========================
+// SOCKET.IO - REAL DATA ONLY
+// ========================
 function initSocket() {
     if (typeof io === 'undefined') return;
 
     socket = io();
 
-    socket.on('connect', function() {
-        console.log('[WS] Connected to server');
+    socket.on('connect', function () {
+        console.log('[WS] ' + jst('connected'));
     });
 
-    socket.on('disconnect', function() {
-        console.log('[WS] Disconnected from server');
+    socket.on('disconnect', function () {
+        console.log('[WS] ' + jst('disconnected'));
     });
 
-    socket.on('sensor_update', function(data) {
-        console.log('[WS] Sensor update:', data);
-
-        // Only update if this device is currently selected
+    socket.on('sensor_update', function (data) {
+        console.log('[WS] Real sensor data:', data);
         if (data.device_id === currentDeviceId) {
             updateSensorCards(data);
             addChartDataPoint(data);
         }
     });
 
-    socket.on('error', function(data) {
+    socket.on('error', function (data) {
         console.error('[WS] Error:', data.message);
     });
 }
 
-// ===========================
-// SENSOR CARDS
-// ===========================
+// ========================
+// SENSOR CARDS - REAL DATA
+// ========================
 function updateSensorCards(data) {
-    const tempEl = document.getElementById('tempValue');
-    const humidityEl = document.getElementById('humidityValue');
-    const gasEl = document.getElementById('gasValue');
-    const batteryEl = document.getElementById('batteryValue');
-    const spoilageEl = document.getElementById('spoilageValue');
-    const spoilageCard = document.getElementById('card-spoilage');
+    var tempEl = document.getElementById('tempValue');
+    var humidityEl = document.getElementById('humidityValue');
+    var gasEl = document.getElementById('gasValue');
+    var batteryEl = document.getElementById('batteryValue');
+    var spoilageEl = document.getElementById('spoilageValue');
+    var spoilageCard = document.getElementById('card-spoilage');
 
     if (tempEl) tempEl.textContent = parseFloat(data.temperature).toFixed(1);
     if (humidityEl) humidityEl.textContent = parseFloat(data.humidity).toFixed(1);
@@ -263,209 +227,159 @@ function updateSensorCards(data) {
     if (batteryEl) batteryEl.textContent = parseFloat(data.battery).toFixed(0);
 
     if (spoilageEl) {
-        const level = data.spoilage_level || 'LOW';
-        spoilageEl.textContent = getSpoilageText(level);
-
-        // Remove old classes
+        var level = (data.spoilage_level || 'LOW').toUpperCase();
+        spoilageEl.textContent = getSpoilageLabel(level);
         spoilageEl.classList.remove('spoilage-low', 'spoilage-medium', 'spoilage-high');
         spoilageEl.classList.add('spoilage-' + level.toLowerCase());
     }
 
-    // Highlight cards based on spoilage level
     if (spoilageCard) {
         spoilageCard.classList.remove('card-highlight-low', 'card-highlight-medium', 'card-highlight-high');
         spoilageCard.classList.add('card-highlight-' + (data.spoilage_level || 'low').toLowerCase());
     }
 
-    // Animate cards
-    document.querySelectorAll('.sensor-card').forEach(function(card) {
+    // Brief animation
+    document.querySelectorAll('.sensor-card').forEach(function (card) {
         card.style.transform = 'scale(1.02)';
-        setTimeout(function() { card.style.transform = ''; }, 200);
+        setTimeout(function () { card.style.transform = ''; }, 200);
     });
 }
 
-function getSpoilageText(level) {
-    const lang = localStorage.getItem("lang") || "hi";
-
-    if (lang === "hi") {
-        if (level === "HIGH") return "🔴 उच्च खतरा";
-        if (level === "MEDIUM") return "🟡 मध्यम";
-        return "🟢 सुरक्षित";
-    } else {
-        if (level === "HIGH") return "🔴 High Risk";
-        if (level === "MEDIUM") return "🟡 Medium";
-        return "🟢 Safe";
+function getSpoilageLabel(level) {
+    switch (level) {
+        case 'HIGH': return jst('high');
+        case 'MEDIUM': return jst('medium');
+        case 'LOW': return jst('safe');
+        default: return level;
     }
 }
 
 function loadDeviceData(deviceId) {
     fetch('/api/latest_data/' + deviceId)
-        .then(function(resp) { return resp.json(); })
-        .then(function(data) {
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
             if (!data.error) {
                 updateSensorCards(data);
             }
         })
-        .catch(function(err) { console.error('Error loading data:', err); });
+        .catch(function (err) { console.error('Load data error:', err); });
 }
 
-// ===========================
-// CHART
-// ===========================
-
-function getChartLabels() {
-    const lang = localStorage.getItem("lang") || "hi";
-
-    if (lang === "hi") {
-        return {
-            temp: "तापमान (°C)",
-            humidity: "नमी (%)",
-            gas: "गैस (PPM)",
-            battery: "बैटरी (%)"
-        };
-    } else {
-        return {
-            temp: "Temperature (°C)",
-            humidity: "Humidity (%)",
-            gas: "Gas (PPM)",
-            battery: "Battery (%)"
-        };
-    }
-}
-
+// ========================
+// CHART - REAL DATA ONLY
+// ========================
 function initChart() {
-    const canvas = document.getElementById('sensorChart');
+    var canvas = document.getElementById('sensorChart');
     if (!canvas) return;
 
-    const labelsText = getChartLabels();
-
-    const ctx = canvas.getContext('2d');
+    var ctx = canvas.getContext('2d');
     sensorChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: [],
             datasets: [
                 {
-                    label: labelsText.temp,
+                    label: jst('temperature'),
                     data: [],
                     borderColor: '#ef4444',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: false,
-                    pointRadius: 2
+                    backgroundColor: 'rgba(239,68,68,0.1)',
+                    borderWidth: 2, tension: 0.4, fill: false,
+                    pointRadius: 2, pointHoverRadius: 5
                 },
                 {
-                    label: labelsText.humidity,
+                    label: jst('humidity'),
                     data: [],
                     borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: false,
-                    pointRadius: 2
+                    backgroundColor: 'rgba(59,130,246,0.1)',
+                    borderWidth: 2, tension: 0.4, fill: false,
+                    pointRadius: 2, pointHoverRadius: 5
                 },
                 {
-                    label: labelsText.gas,
+                    label: jst('gas'),
                     data: [],
                     borderColor: '#f59e0b',
-                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: false,
-                    pointRadius: 2
+                    backgroundColor: 'rgba(245,158,11,0.1)',
+                    borderWidth: 2, tension: 0.4, fill: false,
+                    pointRadius: 2, pointHoverRadius: 5
                 },
                 {
-                    label: labelsText.battery,
+                    label: jst('battery'),
                     data: [],
                     borderColor: '#22c55e',
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: false,
-                    pointRadius: 2
+                    backgroundColor: 'rgba(34,197,94,0.1)',
+                    borderWidth: 2, tension: 0.4, fill: false,
+                    pointRadius: 2, pointHoverRadius: 5
                 }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            },
+            interaction: { intersect: false, mode: 'index' },
             plugins: {
                 legend: {
                     labels: {
-                        color: '#8b949e'
+                        color: '#8b949e',
+                        font: { family: 'Poppins', size: 12 },
+                        padding: 16, usePointStyle: true
                     }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(22,27,34,0.95)',
+                    titleFont: { family: 'Poppins' },
+                    bodyFont: { family: 'Poppins' },
+                    borderColor: 'rgba(48,54,61,0.6)',
+                    borderWidth: 1, cornerRadius: 8, padding: 12
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(48,54,61,0.3)', drawBorder: false },
+                    ticks: { color: '#6e7681', font: { family: 'Poppins', size: 10 }, maxTicksLimit: 10 }
+                },
+                y: {
+                    grid: { color: 'rgba(48,54,61,0.3)', drawBorder: false },
+                    ticks: { color: '#6e7681', font: { family: 'Poppins', size: 11 } }
                 }
             }
         }
     });
 }
 
-// 🔄 LANGUAGE CHANGE PE CHART UPDATE
-function updateChartLanguage() {
-    if (!sensorChart) return;
-
-    const labelsText = getChartLabels();
-
-    sensorChart.data.datasets[0].label = labelsText.temp;
-    sensorChart.data.datasets[1].label = labelsText.humidity;
-    sensorChart.data.datasets[2].label = labelsText.gas;
-    sensorChart.data.datasets[3].label = labelsText.battery;
-
-    sensorChart.update();
-}
-
-// ===========================
-// LOAD DATA
-// ===========================
-
 function loadChartData(deviceId) {
     if (!sensorChart) return;
 
     fetch('/api/sensor_history/' + deviceId)
-        .then(res => res.json())
-        .then(data => {
-            if (!Array.isArray(data)) return;
-
-            let labels = [];
-            let temps = [];
-            let hums = [];
-            let gas = [];
-            let bat = [];
-
-            data.forEach(d => {
-                let time = (d.timestamp || '').split('T')[1];
-                labels.push(time ? time.substring(0,5) : '');
-
-                temps.push(d.temperature);
-                hums.push(d.humidity);
-                gas.push(d.gas);
-                bat.push(d.battery);
-            });
-
-            sensorChart.data.labels = labels;
-            sensorChart.data.datasets[0].data = temps;
-            sensorChart.data.datasets[1].data = hums;
-            sensorChart.data.datasets[2].data = gas;
-            sensorChart.data.datasets[3].data = bat;
-
-            sensorChart.update();
-        });
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (Array.isArray(data) && data.length > 0) {
+                var labels = [], temps = [], hums = [], gases = [], batts = [];
+                data.forEach(function (d) {
+                    var ts = d.timestamp || '';
+                    var time = ts.split('T')[1];
+                    labels.push(time ? time.substring(0, 5) : '');
+                    temps.push(d.temperature);
+                    hums.push(d.humidity);
+                    gases.push(d.gas);
+                    batts.push(d.battery);
+                });
+                sensorChart.data.labels = labels;
+                sensorChart.data.datasets[0].data = temps;
+                sensorChart.data.datasets[1].data = hums;
+                sensorChart.data.datasets[2].data = gases;
+                sensorChart.data.datasets[3].data = batts;
+                sensorChart.update('none');
+            }
+        })
+        .catch(function (err) { console.error('Chart load error:', err); });
 }
-
-// ===========================
-// REALTIME UPDATE
-// ===========================
 
 function addChartDataPoint(data) {
     if (!sensorChart) return;
 
-    let time = (data.timestamp || new Date().toISOString()).split('T')[1];
-    let label = time ? time.substring(0,5) : '';
+    var ts = data.timestamp || new Date().toISOString();
+    var time = ts.split('T')[1];
+    var label = time ? time.substring(0, 5) : '';
 
     sensorChart.data.labels.push(label);
     sensorChart.data.datasets[0].data.push(data.temperature);
@@ -473,16 +387,18 @@ function addChartDataPoint(data) {
     sensorChart.data.datasets[2].data.push(data.gas);
     sensorChart.data.datasets[3].data.push(data.battery);
 
+    // Keep only last 50
     if (sensorChart.data.labels.length > 50) {
         sensorChart.data.labels.shift();
-        sensorChart.data.datasets.forEach(ds => ds.data.shift());
+        sensorChart.data.datasets.forEach(function (ds) { ds.data.shift(); });
     }
 
-    sensorChart.update();
+    sensorChart.update('none');
 }
-// ===========================
-// WEATHER
-// ===========================
+
+// ========================
+// WEATHER - REAL API DATA
+// ========================
 function fetchWeather() {
     var cityInput = document.getElementById('weatherCity');
     var weatherCard = document.getElementById('weatherCard');
@@ -491,8 +407,8 @@ function fetchWeather() {
     var city = cityInput.value.trim() || 'Delhi';
 
     fetch('/api/weather?city=' + encodeURIComponent(city))
-        .then(function(resp) { return resp.json(); })
-        .then(function(data) {
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
             document.getElementById('weatherCityName').textContent = data.city || city;
             document.getElementById('weatherDesc').textContent = data.description || '--';
             document.getElementById('weatherTemp').textContent = data.temperature + '°C';
@@ -500,15 +416,11 @@ function fetchWeather() {
             document.getElementById('weatherIcon').src = 'https://openweathermap.org/img/wn/' + (data.icon || '01d') + '@2x.png';
             weatherCard.style.display = 'block';
         })
-        .catch(function(err) {
-            console.error('Weather error:', err);
-        });
+        .catch(function (err) { console.error('Weather error:', err); });
 }
 
-// ===========================
-// UTILITY
-// ===========================
-
-// Make switchSection available globally (for inline onclick handlers)
+// ========================
+// GLOBAL FUNCTIONS
+// ========================
 window.switchSection = switchSection;
 window.fetchWeather = fetchWeather;
