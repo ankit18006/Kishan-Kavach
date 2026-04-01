@@ -263,7 +263,7 @@ function updateSensorCards(data) {
 
     if (spoilageEl) {
         const level = data.spoilage_level || 'LOW';
-        spoilageEl.textContent = getSpoilageHindi(level);
+        spoilageEl.textContent = getSpoilageText(level);
 
         // Remove old classes
         spoilageEl.classList.remove('spoilage-low', 'spoilage-medium', 'spoilage-high');
@@ -283,12 +283,17 @@ function updateSensorCards(data) {
     });
 }
 
-function getSpoilageHindi(level) {
-    switch(level.toUpperCase()) {
-        case 'HIGH': return '🔴 उच्च खतरा';
-        case 'MEDIUM': return '🟡 मध्यम';
-        case 'LOW': return '🟢 सुरक्षित';
-        default: return level;
+function getSpoilageText(level) {
+    const lang = localStorage.getItem("lang") || "hi";
+
+    if (lang === "hi") {
+        if (level === "HIGH") return "🔴 उच्च खतरा";
+        if (level === "MEDIUM") return "🟡 मध्यम";
+        return "🟢 सुरक्षित";
+    } else {
+        if (level === "HIGH") return "🔴 High Risk";
+        if (level === "MEDIUM") return "🟡 Medium";
+        return "🟢 Safe";
     }
 }
 
