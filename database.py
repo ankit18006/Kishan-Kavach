@@ -6,12 +6,13 @@ DB_PATH = os.path.join(os.path.dirname(__file__), 'kishan_kavach.db')
 
 
 def get_db():
-    """Get database connection - thread safe for gunicorn"""
+    """Get database connection - thread safe"""
     conn = sqlite3.connect(DB_PATH, timeout=30, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA busy_timeout=30000")
     return conn
+
 
 def init_db():
     conn = get_db()
@@ -22,7 +23,7 @@ def init_db():
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         role TEXT NOT NULL DEFAULT 'farmer',
-        status TEXT NOT NULL DEFAULT 'pending',
+        status TEXT NOT NULL DEFAULT 'approved',
         phone TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
@@ -78,25 +79,31 @@ def init_db():
         FOREIGN KEY (farmer_id) REFERENCES users(id)
     )''')
 
-    # Create default admin
+    # Create default admin - APPROVED
     try:
         c.execute(
             "INSERT INTO users (username, password, role, status) VALUES (?, ?, ?, ?)",
             ('admin', 'admin123', 'admin', 'approved')
         )
     except sqlite3.IntegrityError:
-        pass
+        # Already exists - make sure it's approved
+        c.execute(
+            "UPDATE users SET status = 'approved' WHERE username = 'admin'"
+        )
 
-    # Create default owner
+    # Create default owner - APPROVED
     try:
         c.execute(
             "INSERT INTO users (username, password, role, status, phone) VALUES (?, ?, ?, ?, ?)",
             ('owner1', 'owner123', 'owner', 'approved', '+919999999999')
         )
     except sqlite3.IntegrityError:
-        pass
+        # Already exists - make sure it's approved
+        c.execute(
+            "UPDATE users SET status = 'approved' WHERE username = 'owner1'"
+        )
 
-    # Create default device
+    # Create default devices
     try:
         c.execute(
             "INSERT INTO devices (device_id, name, location, crop, owner_id) VALUES (?, ?, ?, ?, ?)",
@@ -113,6 +120,9 @@ def init_db():
     except sqlite3.IntegrityError:
         pass
 
+    # Fix any existing users stuck in pending
+    c.execute("UPDATE users SET status = 'approved' WHERE status = 'pending'")
+
     conn.commit()
     conn.close()
 
@@ -121,7 +131,8 @@ def insert_sensor_data(data):
     conn = get_db()
     c = conn.cursor()
     c.execute('''INSERT INTO sensor_data 
-        (device_id, temperature, humidity, gas, battery, crop, spoilage_risk, health_score, days_remaining, future_risk)
+        (device_id, temperature, humidity, gas, battery, crop, 
+         spoilage_risk, health_score, days_remaining, future_risk)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
               (data['device_id'], data['temperature'], data['humidity'],
                data['gas'], data.get('battery', 100), data.get('crop', 'wheat'),
@@ -182,12 +193,14 @@ def get_user_by_id(user_id):
 
 
 def create_user(username, password, role, phone=''):
+    """Create user - ALL users are auto-approved on registration"""
     conn = get_db()
     c = conn.cursor()
     try:
-        status = 'approved' if role == 'admin' else 'pending'
-        c.execute('INSERT INTO users (username, password, role, status, phone) VALUES (?, ?, ?, ?, ?)',
-                  (username, password, role, status, phone))
+        c.execute(
+            'INSERT INTO users (username, password, role, status, phone) VALUES (?, ?, ?, ?, ?)',
+            (username, password, role, 'approved', phone)
+        )
         conn.commit()
         conn.close()
         return True
@@ -216,13 +229,17 @@ def update_user_status(user_id, status):
 def create_access_request(farmer_id, device_id):
     conn = get_db()
     c = conn.cursor()
-    c.execute('SELECT * FROM access_requests WHERE farmer_id = ? AND device_id = ? AND status = ?',
-              (farmer_id, device_id, 'pending'))
+    c.execute(
+        'SELECT * FROM access_requests WHERE farmer_id = ? AND device_id = ? AND status = ?',
+        (farmer_id, device_id, 'pending')
+    )
     if c.fetchone():
         conn.close()
         return False
-    c.execute('INSERT INTO access_requests (farmer_id, device_id) VALUES (?, ?)',
-              (farmer_id, device_id))
+    c.execute(
+        'INSERT INTO access_requests (farmer_id, device_id) VALUES (?, ?)',
+        (farmer_id, device_id)
+    )
     conn.commit()
     conn.close()
     return True
@@ -243,14 +260,22 @@ def get_access_requests(status='pending'):
 def update_access_request(request_id, status):
     conn = get_db()
     c = conn.cursor()
-    c.execute('UPDATE access_requests SET status = ? WHERE id = ?', (status, request_id))
+    c.execute(
+        'UPDATE access_requests SET status = ? WHERE id = ?',
+        (status, request_id)
+    )
     if status == 'approved':
-        c.execute('SELECT farmer_id, device_id FROM access_requests WHERE id = ?', (request_id,))
+        c.execute(
+            'SELECT farmer_id, device_id FROM access_requests WHERE id = ?',
+            (request_id,)
+        )
         row = c.fetchone()
         if row:
             try:
-                c.execute('INSERT INTO farmer_device_access (farmer_id, device_id) VALUES (?, ?)',
-                          (row['farmer_id'], row['device_id']))
+                c.execute(
+                    'INSERT INTO farmer_device_access (farmer_id, device_id) VALUES (?, ?)',
+                    (row['farmer_id'], row['device_id'])
+                )
             except sqlite3.IntegrityError:
                 pass
     conn.commit()
@@ -272,8 +297,10 @@ def add_device(device_id, name, location, crop, owner_id):
     conn = get_db()
     c = conn.cursor()
     try:
-        c.execute('INSERT INTO devices (device_id, name, location, crop, owner_id) VALUES (?, ?, ?, ?, ?)',
-                  (device_id, name, location, crop, owner_id))
+        c.execute(
+            'INSERT INTO devices (device_id, name, location, crop, owner_id) VALUES (?, ?, ?, ?, ?)',
+            (device_id, name, location, crop, owner_id)
+        )
         conn.commit()
         conn.close()
         return True
@@ -315,8 +342,10 @@ def get_alert_history(device_id=None, limit=20):
     conn = get_db()
     c = conn.cursor()
     if device_id:
-        c.execute('SELECT * FROM alerts WHERE device_id = ? ORDER BY sent_at DESC LIMIT ?',
-                  (device_id, limit))
+        c.execute(
+            'SELECT * FROM alerts WHERE device_id = ? ORDER BY sent_at DESC LIMIT ?',
+            (device_id, limit)
+        )
     else:
         c.execute('SELECT * FROM alerts ORDER BY sent_at DESC LIMIT ?', (limit,))
     rows = c.fetchall()
@@ -327,8 +356,10 @@ def get_alert_history(device_id=None, limit=20):
 def insert_alert(device_id, alert_type, message):
     conn = get_db()
     c = conn.cursor()
-    c.execute('INSERT INTO alerts (device_id, alert_type, message) VALUES (?, ?, ?)',
-              (device_id, alert_type, message))
+    c.execute(
+        'INSERT INTO alerts (device_id, alert_type, message) VALUES (?, ?, ?)',
+        (device_id, alert_type, message)
+    )
     conn.commit()
     conn.close()
 
