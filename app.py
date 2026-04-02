@@ -429,6 +429,64 @@ def api_stats():
     return jsonify(get_system_stats())
 
 
+@app.route('/api/sensor-data', methods=['POST'])
+def api_sensor_data_http():
+    """HTTP endpoint for ESP32 to send sensor data (backup for WebSocket)"""
+    try:
+        data = request.get_json(force=True)
+        device_id = data.get('device_id', 'unknown')
+        temperature = float(data.get('temperature', 0))
+        humidity = float(data.get('humidity', 0))
+        gas = float(data.get('gas', 0))
+        battery = float(data.get('battery', 100))
+        crop = data.get('crop', 'wheat')
+
+        # Auto register device if not exists
+        existing_devices = get_all_devices()
+        device_exists = any(d['device_id'] == device_id for d in existing_devices)
+        if not device_exists:
+            add_device(device_id, f"Auto-{device_id}", "Auto-detected", crop, None)
+            print(f"[HTTP Auto Register] Device {device_id} auto-registered!")
+            socketio.emit('device_added', {
+                'device_id': device_id,
+                'name': f"Auto-{device_id}",
+                'location': 'Auto-detected',
+                'crop': crop
+            })
+
+        history = get_sensor_history(device_id, 10)
+        analysis = AIEngine.full_analysis(temperature, humidity, gas, crop, history)
+
+        sensor_record = {
+            'device_id': device_id,
+            'temperature': temperature,
+            'humidity': humidity,
+            'gas': gas,
+            'battery': battery,
+            'crop': crop,
+            'spoilage_risk': analysis['spoilage_risk'],
+            'health_score': analysis['health_score'],
+            'days_remaining': analysis['days_remaining'],
+            'future_risk': analysis['future_risk']
+        }
+
+        insert_sensor_data(sensor_record)
+        check_and_send_alert(device_id, analysis, crop)
+
+        broadcast_data = {
+            **sensor_record,
+            'analysis': analysis,
+            'timestamp': datetime.now().isoformat()
+        }
+        socketio.emit('sensor_update', broadcast_data)
+
+        return jsonify({'success': True, 'data': broadcast_data})
+
+    except Exception as e:
+        print(f"[HTTP Sensor Error] {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/api/simulate', methods=['POST'])
 @login_required
 def api_simulate():
@@ -522,59 +580,20 @@ def handle_sensor_data(data):
         battery = float(data.get('battery', 100))
         crop = data.get('crop', 'wheat')
 
-        history = get_sensor_history(device_id, 10)
-        analysis = AIEngine.full_analysis(
-            temperature, humidity, gas, crop, history
-        )
-
-        sensor_record = {
-            'device_id': device_id,
-            'temperature': temperature,
-            'humidity': humidity,
-            'gas': gas,
-            'battery': battery,
-            'crop': crop,
-            'spoilage_risk': analysis['spoilage_risk'],
-            'health_score': analysis['health_score'],
-            'days_remaining': analysis['days_remaining'],
-            'future_risk': analysis['future_risk']
-        }
-
-        insert_sensor_data(sensor_record)
-        check_and_send_alert(device_id, analysis, crop)
-
-        # AI Relay Control - send command back to ESP32
-        relay_cmd = get_relay_command(
-            analysis['spoilage_risk'],
-            analysis['health_score']
-        )
-        emit('relay_control', {
-            'device_id': device_id,
-            'relay': relay_cmd
-        })
-
-        broadcast_data = {
-            **sensor_record,
-            'analysis': analysis,
-            'timestamp': datetime.now().isoformat()
-        }
-
-        emit('sensor_update', broadcast_data, broadcast=True)
-        emit('data_received', {
-            'status': 'ok',
-            'device_id': device_id
-        })
-
-        print(
-            f"[Sensor] {device_id} | T:{temperature} H:{humidity} "
-            f"G:{gas} | Score:{analysis['health_score']} "
-            f"Risk:{analysis['spoilage_risk']} | Relay:{relay_cmd}"
-        )
-
-    except Exception as e:
-        print(f"[Error] Processing sensor data: {e}")
-        emit('error', {'message': str(e)})
-
+        # ===== AUTO REGISTER DEVICE IF NOT EXISTS =====
+        existing_devices = get_all_devices()
+        device_exists = any(d['device_id'] == device_id for d in existing_devices)
+        if not device_exists:
+            # Auto-add device (owner_id=None, will be claimed later)
+            add_device(device_id, f"Auto-{device_id}", "Auto-detected", crop, None)
+            print(f"[Auto Register] Device {device_id} auto-registered!")
+            # Notify all clients that a new device was added
+            socketio.emit('device_added', {
+                'device_id': device_id,
+                'name': f"Auto-{device_id}",
+                'location': 'Auto-detected',
+                'crop': crop
+            })
 
 # ======================== ADD TO app.py ========================
 # Add these BELOW the existing @socketio.on('sensor_data') handler
