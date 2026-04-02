@@ -1,55 +1,56 @@
 <!DOCTYPE html>
-<html lang="{{ lang }}">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ t.login }} - Kishan Kavach</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Login - Kishan Kavach</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="auth-page">
     <div class="auth-container">
-        <div class="auth-bg-effects">
-            <div class="hero-glow glow-1"></div>
-            <div class="hero-glow glow-2"></div>
-        </div>
-        <div class="auth-card glass-card fade-up">
+        <div class="auth-card glass-card">
             <div class="auth-header">
-                <a href="/" class="auth-logo">
-                    <span class="logo-icon">🛡️</span>
-                    <span class="logo-text">Kishan <span class="gradient-text">Kavach</span></span>
-                </a>
-                <div class="lang-switch auth-lang">
-                    <a href="{{ url_for('set_language', lang='en') }}" class="lang-btn {% if lang == 'en' %}active{% endif %}">EN</a>
-                    <a href="{{ url_for('set_language', lang='hi') }}" class="lang-btn {% if lang == 'hi' %}active{% endif %}">हिं</a>
-                </div>
-                <h2>{{ t.login }}</h2>
-                <p>{{ t.login_to_account }}</p>
+                <i class="fas fa-shield-alt auth-logo"></i>
+                <h1>Kishan Kavach</h1>
+                <p>Login to your account</p>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
             {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">{{ message }}</div>
+            <div class="flash-message flash-{{ category }}">
+                <i class="fas fa-{% if category == 'error' %}exclamation-circle{% elif category == 'success' %}check-circle{% else %}info-circle{% endif %}"></i>
+                {{ message }}
+            </div>
             {% endfor %}
             {% endif %}
             {% endwith %}
 
             <form method="POST" class="auth-form">
                 <div class="form-group">
-                    <label for="email">📧 {{ t.email }}</label>
-                    <input type="email" id="email" name="email" placeholder="{{ t.email }}" required>
+                    <label><i class="fas fa-user"></i> Username</label>
+                    <input type="text" name="username" required placeholder="Enter username" autocomplete="username">
                 </div>
                 <div class="form-group">
-                    <label for="password">🔒 {{ t.password }}</label>
-                    <input type="password" id="password" name="password" placeholder="{{ t.password }}" required>
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" name="password" required placeholder="Enter password" autocomplete="current-password">
                 </div>
-                <button type="submit" class="btn btn-gradient btn-full">{{ t.login }}</button>
+                <button type="submit" class="btn-submit btn-glow">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
             </form>
+
             <div class="auth-footer">
-                <p>{{ t.no_account }} <a href="{{ url_for('register') }}" class="gradient-text">{{ t.register }}</a></p>
-                <a href="/" class="back-link">← {{ t.go_home }}</a>
+                <p>Don't have an account? <a href="/register">Register here</a></p>
+                <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Back to Home</a>
+            </div>
+
+            <div class="demo-accounts">
+                <p><strong>Demo Accounts:</strong></p>
+                <small>Admin: admin / admin123</small><br>
+                <small>Owner: owner1 / owner123</small>
             </div>
         </div>
     </div>
