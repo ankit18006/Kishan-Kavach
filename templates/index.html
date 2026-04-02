@@ -1,172 +1,126 @@
 <!DOCTYPE html>
-<html lang="{{ lang }}">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kishan Kavach - {{ t.app_name }}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Kishan Kavach - Smart Agriculture Platform</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="landing-page">
-    <nav class="navbar" id="navbar">
-        <div class="nav-container">
-            <a href="/" class="nav-logo">
-                <span class="logo-icon">🛡️</span>
-                <span class="logo-text">Kishan <span class="gradient-text">Kavach</span></span>
-            </a>
+    <div class="landing-container">
+        <!-- Hero Section -->
+        <nav class="landing-nav">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <span>Kishan Kavach</span>
+            </div>
             <div class="nav-links">
-                <a href="#features" class="nav-link">{{ t.features }}</a>
-                <a href="#how-it-works" class="nav-link">{{ t.how_it_works }}</a>
-                <div class="lang-switch">
-                    <a href="{{ url_for('set_language', lang='en') }}" class="lang-btn {% if lang == 'en' %}active{% endif %}">EN</a>
-                    <a href="{{ url_for('set_language', lang='hi') }}" class="lang-btn {% if lang == 'hi' %}active{% endif %}">हिं</a>
-                </div>
-                <a href="{{ url_for('login') }}" class="nav-link">{{ t.login }}</a>
-                <a href="{{ url_for('register') }}" class="btn btn-gradient btn-sm">{{ t.register }}</a>
+                <button class="lang-toggle" onclick="toggleLanguage()">
+                    <i class="fas fa-language"></i> <span id="langLabel">हिंदी</span>
+                </button>
+                <a href="/login" class="btn-nav">Login</a>
+                <a href="/register" class="btn-nav btn-primary">Register</a>
             </div>
-            <button class="mobile-toggle" id="mobileToggle">
-                <span></span><span></span><span></span>
-            </button>
-        </div>
-        <div class="mobile-menu" id="mobileMenu">
-            <a href="#features" class="nav-link">{{ t.features }}</a>
-            <a href="#how-it-works" class="nav-link">{{ t.how_it_works }}</a>
-            <div class="lang-switch">
-                <a href="{{ url_for('set_language', lang='en') }}" class="lang-btn {% if lang == 'en' %}active{% endif %}">EN</a>
-                <a href="{{ url_for('set_language', lang='hi') }}" class="lang-btn {% if lang == 'hi' %}active{% endif %}">हिं</a>
-            </div>
-            <a href="{{ url_for('login') }}" class="nav-link">{{ t.login }}</a>
-            <a href="{{ url_for('register') }}" class="btn btn-gradient btn-sm">{{ t.register }}</a>
-        </div>
-    </nav>
+        </nav>
 
-    <section class="hero">
-        <div class="hero-bg-effects">
-            <div class="hero-glow glow-1"></div>
-            <div class="hero-glow glow-2"></div>
-            <div class="hero-glow glow-3"></div>
-        </div>
-        <div class="container">
-            <div class="hero-content fade-up">
-                <div class="hero-badge">🌾 {{ t.smart_tech }}</div>
-                <h1 class="hero-title">{{ t.hero_title }}</h1>
-                <p class="hero-subtitle">{{ t.hero_subtitle }}</p>
-                <div class="hero-actions">
-                    <a href="{{ url_for('register') }}" class="btn btn-gradient btn-lg">
-                        {{ t.get_started }}
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    </a>
-                    <a href="#features" class="btn btn-outline btn-lg">{{ t.learn_more }}</a>
-                </div>
-                <div class="hero-stats">
-                    <div class="stat-item fade-up" style="animation-delay:0.2s">
-                        <span class="stat-number">24/7</span>
-                        <span class="stat-label">{{ t.monitoring_24x7 }}</span>
-                    </div>
-                    <div class="stat-item fade-up" style="animation-delay:0.4s">
-                        <span class="stat-number">⚡</span>
-                        <span class="stat-label">{{ t.instant_alerts }}</span>
-                    </div>
-                    <div class="stat-item fade-up" style="animation-delay:0.6s">
-                        <span class="stat-number">100%</span>
-                        <span class="stat-label">{{ t.secure }}</span>
-                    </div>
+        <section class="hero">
+            <div class="hero-content">
+                <h1 class="hero-title" data-en="Smart Agriculture Protection" data-hi="स्मार्ट कृषि सुरक्षा">
+                    Smart Agriculture Protection
+                </h1>
+                <p class="hero-subtitle" data-en="AI-powered crop monitoring, spoilage prediction, and IoT intelligence for modern farmers." 
+                   data-hi="आधुनिक किसानों के लिए AI-संचालित फसल निगरानी, खराबी पूर्वानुमान और IoT बुद्धिमत्ता।">
+                    AI-powered crop monitoring, spoilage prediction, and IoT intelligence for modern farmers.
+                </p>
+                <div class="hero-buttons">
+                    <a href="/register" class="btn-hero btn-glow" data-en="Get Started" data-hi="शुरू करें">Get Started</a>
+                    <a href="/login" class="btn-hero btn-outline" data-en="Login" data-hi="लॉग इन करें">Login</a>
                 </div>
             </div>
-        </div>
-    </section>
+            <div class="hero-visual">
+                <div class="floating-card card-1">
+                    <i class="fas fa-temperature-high"></i>
+                    <span data-en="Real-time Monitoring" data-hi="वास्तविक समय निगरानी">Real-time Monitoring</span>
+                </div>
+                <div class="floating-card card-2">
+                    <i class="fas fa-brain"></i>
+                    <span data-en="AI Prediction" data-hi="AI पूर्वानुमान">AI Prediction</span>
+                </div>
+                <div class="floating-card card-3">
+                    <i class="fas fa-seedling"></i>
+                    <span data-en="100+ Crops" data-hi="100+ फसलें">100+ Crops</span>
+                </div>
+                <div class="floating-card card-4">
+                    <i class="fas fa-bell"></i>
+                    <span data-en="Smart Alerts" data-hi="स्मार्ट अलर्ट">Smart Alerts</span>
+                </div>
+            </div>
+        </section>
 
-    <section class="features-section" id="features">
-        <div class="container">
-            <div class="section-header fade-up">
-                <h2 class="section-title">{{ t.features }}</h2>
-                <p class="section-subtitle">{{ t.features_subtitle }}</p>
-            </div>
+        <section class="features-section">
+            <h2 data-en="Powerful Features" data-hi="शक्तिशाली विशेषताएं">Powerful Features</h2>
             <div class="features-grid">
-                <div class="feature-card glass-card fade-up" style="animation-delay:0.1s">
-                    <div class="feature-icon">📊</div>
-                    <h3>{{ t.feature_realtime }}</h3>
-                    <p>{{ t.feature_realtime_desc }}</p>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-microchip"></i></div>
+                    <h3 data-en="IoT Integration" data-hi="IoT एकीकरण">IoT Integration</h3>
+                    <p data-en="ESP32 sensors monitor temperature, humidity, and gas levels in real-time." 
+                       data-hi="ESP32 सेंसर वास्तविक समय में तापमान, आर्द्रता और गैस स्तर की निगरानी करते हैं।">
+                       ESP32 sensors monitor temperature, humidity, and gas levels in real-time.</p>
                 </div>
-                <div class="feature-card glass-card fade-up" style="animation-delay:0.2s">
-                    <div class="feature-icon">📱</div>
-                    <h3>{{ t.feature_whatsapp }}</h3>
-                    <p>{{ t.feature_whatsapp_desc }}</p>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                    <h3 data-en="AI Spoilage Prediction" data-hi="AI खराबी पूर्वानुमान">AI Spoilage Prediction</h3>
+                    <p data-en="Smart algorithms predict when your crops will spoil and suggest actions." 
+                       data-hi="स्मार्ट एल्गोरिदम भविष्यवाणी करते हैं कि आपकी फसल कब खराब होगी।">
+                       Smart algorithms predict when your crops will spoil and suggest actions.</p>
                 </div>
-                <div class="feature-card glass-card fade-up" style="animation-delay:0.3s">
-                    <div class="feature-icon">🌦️</div>
-                    <h3>{{ t.feature_weather }}</h3>
-                    <p>{{ t.feature_weather_desc }}</p>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-leaf"></i></div>
+                    <h3 data-en="Crop Intelligence" data-hi="फसल बुद्धिमत्ता">Crop Intelligence</h3>
+                    <p data-en="Database of 100+ crops with ideal storage conditions and thresholds." 
+                       data-hi="100+ फसलों का डेटाबेस आदर्श भंडारण स्थितियों के साथ।">
+                       Database of 100+ crops with ideal storage conditions and thresholds.</p>
                 </div>
-                <div class="feature-card glass-card fade-up" style="animation-delay:0.4s">
-                    <div class="feature-icon">📈</div>
-                    <h3>{{ t.feature_graph }}</h3>
-                    <p>{{ t.feature_graph_desc }}</p>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fab fa-whatsapp"></i></div>
+                    <h3 data-en="WhatsApp Alerts" data-hi="व्हाट्सएप अलर्ट">WhatsApp Alerts</h3>
+                    <p data-en="Get instant WhatsApp alerts when conditions become dangerous." 
+                       data-hi="जब स्थिति खतरनाक हो जाए तो तुरंत व्हाट्सएप अलर्ट प्राप्त करें।">
+                       Get instant WhatsApp alerts when conditions become dangerous.</p>
                 </div>
-                <div class="feature-card glass-card fade-up" style="animation-delay:0.5s">
-                    <div class="feature-icon">🔐</div>
-                    <h3>{{ t.feature_security }}</h3>
-                    <p>{{ t.feature_security_desc }}</p>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-cloud-sun"></i></div>
+                    <h3 data-en="Weather Data" data-hi="मौसम डेटा">Weather Data</h3>
+                    <p data-en="Integrated weather information to correlate with storage conditions." 
+                       data-hi="भंडारण स्थितियों से संबंधित एकीकृत मौसम जानकारी।">
+                       Integrated weather information to correlate with storage conditions.</p>
                 </div>
-                <div class="feature-card glass-card fade-up" style="animation-delay:0.6s">
-                    <div class="feature-icon">📡</div>
-                    <h3>{{ t.feature_multidevice }}</h3>
-                    <p>{{ t.feature_multidevice_desc }}</p>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-users-cog"></i></div>
+                    <h3 data-en="Multi-Role Access" data-hi="बहु-भूमिका पहुँच">Multi-Role Access</h3>
+                    <p data-en="Farmer, Owner, and Admin roles with granular access control." 
+                       data-hi="किसान, मालिक और व्यवस्थापक भूमिकाएँ विस्तृत एक्सेस कंट्रोल के साथ।">
+                       Farmer, Owner, and Admin roles with granular access control.</p>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <section class="how-section" id="how-it-works">
-        <div class="container">
-            <div class="section-header fade-up">
-                <h2 class="section-title">{{ t.how_it_works }}</h2>
-                <p class="section-subtitle">{{ t.how_subtitle }}</p>
-            </div>
-            <div class="steps-grid">
-                <div class="step-card fade-up" style="animation-delay:0.1s">
-                    <div class="step-number">01</div>
-                    <h3>{{ t.step1_title }}</h3>
-                    <p>{{ t.step1_desc }}</p>
-                </div>
-                <div class="step-connector fade-up" style="animation-delay:0.2s">→</div>
-                <div class="step-card fade-up" style="animation-delay:0.3s">
-                    <div class="step-number">02</div>
-                    <h3>{{ t.step2_title }}</h3>
-                    <p>{{ t.step2_desc }}</p>
-                </div>
-                <div class="step-connector fade-up" style="animation-delay:0.4s">→</div>
-                <div class="step-card fade-up" style="animation-delay:0.5s">
-                    <div class="step-number">03</div>
-                    <h3>{{ t.step3_title }}</h3>
-                    <p>{{ t.step3_desc }}</p>
-                </div>
-            </div>
-        </div>
-    </section>
+        <footer class="landing-footer">
+            <p>© 2024 Kishan Kavach | Smart Agriculture Protection Platform</p>
+        </footer>
+    </div>
 
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <span class="logo-icon">🛡️</span>
-                    <span class="logo-text">Kishan <span class="gradient-text">Kavach</span></span>
-                    <p>{{ t.footer_tagline }}</p>
-                </div>
-                <div class="footer-links">
-                    <a href="#features">{{ t.features }}</a>
-                    <a href="#how-it-works">{{ t.how_it_works }}</a>
-                    <a href="{{ url_for('login') }}">{{ t.login }}</a>
-                    <a href="{{ url_for('register') }}">{{ t.register }}</a>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2024 Kishan Kavach. {{ t.all_rights }}</p>
-            </div>
-        </div>
-    </footer>
-
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        let currentLang = 'en';
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'hi' : 'en';
+            document.getElementById('langLabel').textContent = currentLang === 'en' ? 'हिंदी' : 'English';
+            document.querySelectorAll('[data-en]').forEach(el => {
+                el.textContent = el.getAttribute(`data-${currentLang}`);
+            });
+        }
+    </script>
 </body>
 </html>
