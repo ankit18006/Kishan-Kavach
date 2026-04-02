@@ -186,10 +186,20 @@ def register():
             return render_template('register.html')
 
         if create_user(username, password, role, phone):
-            flash(
-                'Registration successful! Waiting for approval.',
-                'success'
-            )
+            # Auto-login after registration since user is auto-approved
+            user = get_user(username)
+            if user:
+                session['user_id'] = user['id']
+                session['username'] = user['username']
+                session['role'] = user['role']
+                session.permanent = True
+
+                if user['role'] == 'owner':
+                    return redirect(url_for('owner_dashboard'))
+                else:
+                    return redirect(url_for('farmer_dashboard'))
+
+            flash('Registration successful! Please login.', 'success')
             return redirect(url_for('login'))
         else:
             flash('Username already exists!', 'error')
