@@ -1,4 +1,4 @@
-// ===== KISHAN KAVACH - COMPLETE FRONTEND LOGIC =====
+// ===== KISHAN KAVACH - PRODUCTION FRONTEND (Real Data Only) =====
 
 let socket;
 let currentRole = 'farmer';
@@ -6,6 +6,8 @@ let currentDevice = '';
 let sensorChart, predictionChart, healthChart;
 let currentLang = 'en';
 let allCrops = [];
+let deviceOnline = false;
+let lastDataTimestamp = null;
 
 // ===== INIT =====
 function initApp(role) {
@@ -16,6 +18,7 @@ function initApp(role) {
     loadCrops();
     loadWeather();
     loadAlerts();
+    showNoDataState(); // Start with no-data state until real data arrives
 
     if (role === 'admin') {
         loadUsers();
@@ -25,6 +28,118 @@ function initApp(role) {
     if (role === 'owner') {
         loadAccessRequests();
     }
+
+    // Periodic device online check (every 30s)
+    setInterval(checkDeviceStatus, 30000);
+}
+
+// ===== DATA VALIDATION =====
+function isValidSensorData(data) {
+    return data &&
+        typeof data.temperature === 'number' &&
+        typeof data.humidity === 'number' &&
+        typeof data.gas === 'number' &&
+        !isNaN(data.temperature) &&
+        !isNaN(data.humidity) &&
+        !isNaN(data.gas);
+}
+
+// ===== NO DATA / OFFLINE STATE =====
+function showNoDataState() {
+    clearDashboard();
+
+    const noDataEl = document.getElementById('noDataMessage');
+    if (noDataEl) {
+        noDataEl.style.display = 'flex';
+        noDataEl.innerHTML = `
+            <div class="no-data-container">
+                <i class="fas fa-satellite-dish no-data-icon"></i>
+                <h3>No live data available</h3>
+                <p>Please connect your IoT device to start monitoring</p>
+                <span class="device-status-badge offline">
+                    <i class="fas fa-circle"></i> Device offline
+                </span>
+            </div>
+        `;
+    }
+
+    // Hide dashboard content until real data arrives
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (dashboardContent) {
+        dashboardContent.classList.add('awaiting-data');
+    }
+}
+
+function hideNoDataState() {
+    const noDataEl = document.getElementById('noDataMessage');
+    if (noDataEl) {
+        noDataEl.style.display = 'none';
+    }
+
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (dashboardContent) {
+        dashboardContent.classList.remove('awaiting-data');
+    }
+}
+
+function clearDashboard() {
+    const fields = ['temperature', 'humidity', 'gasLevel', 'battery',
+                    'healthScore', 'daysRemaining', 'condition'];
+    fields.forEach(id => setText(id, '--'));
+
+    const futureEl = document.getElementById('futureRisk');
+    if (futureEl) {
+        futureEl.textContent = '--';
+        futureEl.className = 'insight-value';
+    }
+
+    const spoilageEl = document.getElementById('spoilageRisk');
+    if (spoilageEl) {
+        spoilageEl.textContent = 'No data';
+        spoilageEl.className = 'sensor-ideal';
+    }
+
+    const healthFill = document.getElementById('healthFill');
+    if (healthFill) {
+        healthFill.style.width = '0%';
+        healthFill.style.background = 'var(--glass-border)';
+    }
+
+    const recs = document.getElementById('recommendations');
+    if (recs) recs.innerHTML = '<p class="empty-state">Waiting for sensor data...</p>';
+
+    const timeline = document.getElementById('spoilageTimeline');
+    if (timeline) timeline.innerHTML = '';
+}
+
+function showDeviceOffline() {
+    deviceOnline = false;
+    const statusBadge = document.getElementById('deviceStatusBadge');
+    if (statusBadge) {
+        statusBadge.innerHTML = '<i class="fas fa-circle"></i> Device offline';
+        statusBadge.className = 'device-status-badge offline';
+    }
+}
+
+function showDeviceOnline() {
+    deviceOnline = true;
+    const statusBadge = document.getElementById('deviceStatusBadge');
+    if (statusBadge) {
+        statusBadge.innerHTML = '<i class="fas fa-circle"></i> Device online';
+        statusBadge.className = 'device-status-badge online';
+    }
+}
+
+function checkDeviceStatus() {
+    if (!lastDataTimestamp) {
+        showDeviceOffline();
+        return;
+    }
+    const elapsed = Date.now() - lastDataTimestamp;
+    // Consider device offline if no data for 60 seconds
+    if (elapsed > 60000) {
+        showDeviceOffline();
+    }
 }
 
 // ===== SOCKET.IO =====
@@ -32,16 +147,27 @@ function connectSocket() {
     socket = io();
 
     socket.on('connect', () => {
-        console.log('Connected to Kishan Kavach');
+        console.log('[Kishan Kavach] Connected to server');
         updateConnectionStatus(true);
     });
 
     socket.on('disconnect', () => {
-        console.log('Disconnected');
+        console.log('[Kishan Kavach] Disconnected from server');
         updateConnectionStatus(false);
+        showDeviceOffline();
     });
 
     socket.on('sensor_update', (data) => {
+        // ONLY process valid real sensor data
+        if (!isValidSensorData(data)) {
+            console.warn('[Kishan Kavach] Received invalid sensor data, ignoring');
+            return;
+        }
+
+        lastDataTimestamp = Date.now();
+        showDeviceOnline();
+        hideNoDataState();
+
         if (data.device_id === currentDevice) {
             updateDashboard(data);
         }
@@ -49,7 +175,11 @@ function connectSocket() {
     });
 
     socket.on('device_data', (data) => {
-        if (data.latest) {
+        if (data.latest && isValidSensorData(data.latest)) {
+            lastDataTimestamp = Date.now();
+            showDeviceOnline();
+            hideNoDataState();
+
             updateDashboard({
                 ...data.latest,
                 analysis: data.analysis,
@@ -127,7 +257,7 @@ function loadDevices() {
 
             renderDevicesList(devices);
         })
-        .catch(err => console.error('Error loading devices:', err));
+        .catch(err => console.error('[Kishan Kavach] Error loading devices:', err));
 }
 
 function renderDevicesList(devices) {
@@ -135,7 +265,12 @@ function renderDevicesList(devices) {
     if (!container) return;
 
     if (devices.length === 0) {
-        container.innerHTML = '<p class="empty-state">No devices found</p>';
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-microchip" style="font-size:2rem;margin-bottom:10px;opacity:0.5;"></i>
+                <p>No devices registered</p>
+                <p><small>Add a device and connect your ESP32 to begin</small></p>
+            </div>`;
         return;
     }
 
@@ -143,7 +278,7 @@ function renderDevicesList(devices) {
         <div class="device-card">
             <div class="device-card-header">
                 <h3><i class="fas fa-microchip"></i> ${d.name || d.device_id}</h3>
-                <span class="status-badge status-approved">Active</span>
+                <span class="status-badge status-approved">Registered</span>
             </div>
             <div class="device-meta">
                 <span><i class="fas fa-fingerprint"></i> ${d.device_id}</span>
@@ -167,9 +302,12 @@ function renderDevicesList(devices) {
 function switchDevice(deviceId) {
     if (!deviceId) return;
     currentDevice = deviceId;
+    lastDataTimestamp = null; // Reset — we don't know if this device is online yet
     const selector = document.getElementById('activeDevice');
     if (selector) selector.value = deviceId;
 
+    // Reset dashboard while loading
+    showNoDataState();
     loadDeviceData(deviceId);
 
     // Switch to dashboard
@@ -185,7 +323,11 @@ function loadDeviceData(deviceId) {
     fetch(`/api/device/${deviceId}/data`)
         .then(r => r.json())
         .then(data => {
-            if (data.latest) {
+            if (data.latest && isValidSensorData(data.latest)) {
+                lastDataTimestamp = Date.now();
+                showDeviceOnline();
+                hideNoDataState();
+
                 updateDashboard({
                     ...data.latest,
                     analysis: data.analysis,
@@ -198,42 +340,71 @@ function loadDeviceData(deviceId) {
                 if (data.timeline) {
                     renderTimeline(data.timeline);
                 }
+            } else {
+                // No real data exists for this device
+                showNoDataState();
+                clearCharts();
             }
         })
-        .catch(err => console.error('Error loading device data:', err));
+        .catch(err => {
+            console.error('[Kishan Kavach] Error loading device data:', err);
+            showNoDataState();
+        });
 }
 
-// ===== UPDATE DASHBOARD =====
+// ===== UPDATE DASHBOARD (REAL DATA ONLY) =====
 function updateDashboard(data) {
-    // Sensor values
-    setText('temperature', `${data.temperature?.toFixed(1) || '--'}°C`);
-    setText('humidity', `${data.humidity?.toFixed(1) || '--'}%`);
-    setText('gasLevel', `${data.gas?.toFixed(0) || '--'} ppm`);
-    setText('battery', `${data.battery?.toFixed(0) || '--'}%`);
+    if (!isValidSensorData(data)) {
+        showNoDataState();
+        return;
+    }
+
+    // Sensor values — display only real readings
+    setText('temperature', `${data.temperature.toFixed(1)}°C`);
+    setText('humidity', `${data.humidity.toFixed(1)}%`);
+    setText('gasLevel', `${data.gas.toFixed(0)} ppm`);
+    setText('battery', typeof data.battery === 'number' ? `${data.battery.toFixed(0)}%` : '--');
 
     const analysis = data.analysis || {};
     const cropInfo = analysis.crop_info;
 
-    // AI Insights
-    const healthScore = analysis.health_score || 0;
-    setText('healthScore', `${healthScore}%`);
-    setText('daysRemaining', `${analysis.days_remaining || '--'} days`);
-    setText('condition', analysis.condition || '--');
+    // AI Insights — only display if analysis ran on real data
+    if (analysis && typeof analysis.health_score === 'number') {
+        const healthScore = analysis.health_score;
+        setText('healthScore', `${healthScore}%`);
+        setText('daysRemaining', analysis.days_remaining != null ? `${analysis.days_remaining} days` : '--');
+        setText('condition', analysis.condition || '--');
 
-    const futureRisk = analysis.future_risk || '--';
-    const futureEl = document.getElementById('futureRisk');
-    if (futureEl) {
-        futureEl.textContent = futureRisk;
-        futureEl.className = 'insight-value risk-' + futureRisk.toLowerCase();
-    }
+        const futureRisk = analysis.future_risk || '--';
+        const futureEl = document.getElementById('futureRisk');
+        if (futureEl) {
+            futureEl.textContent = futureRisk;
+            futureEl.className = futureRisk !== '--'
+                ? 'insight-value risk-' + futureRisk.toLowerCase()
+                : 'insight-value';
+        }
 
-    // Health bar
-    const healthFill = document.getElementById('healthFill');
-    if (healthFill) {
-        healthFill.style.width = healthScore + '%';
-        if (healthScore >= 70) healthFill.style.background = 'var(--accent-green)';
-        else if (healthScore >= 40) healthFill.style.background = 'var(--accent-orange)';
-        else healthFill.style.background = 'var(--accent-red)';
+        // Health bar
+        const healthFill = document.getElementById('healthFill');
+        if (healthFill) {
+            healthFill.style.width = healthScore + '%';
+            if (healthScore >= 70) healthFill.style.background = 'var(--accent-green)';
+            else if (healthScore >= 40) healthFill.style.background = 'var(--accent-orange)';
+            else healthFill.style.background = 'var(--accent-red)';
+        }
+
+        // Color card by health
+        colorCard('healthCard', healthScore >= 70 ? 'green' : healthScore >= 40 ? 'orange' : 'red');
+    } else {
+        // No AI analysis available
+        setText('healthScore', '--');
+        setText('daysRemaining', '--');
+        setText('condition', '--');
+        const futureEl = document.getElementById('futureRisk');
+        if (futureEl) {
+            futureEl.textContent = '--';
+            futureEl.className = 'insight-value';
+        }
     }
 
     // Crop-specific ideals
@@ -244,19 +415,21 @@ function updateDashboard(data) {
     }
 
     // Spoilage risk
-    const risk = analysis.spoilage_risk || data.spoilage_risk || 'LOW';
-    const riskEl = document.getElementById('spoilageRisk');
-    if (riskEl) {
-        riskEl.textContent = `Risk: ${risk}`;
-        riskEl.className = 'sensor-ideal risk-' + risk.toLowerCase();
+    if (analysis.spoilage_risk || data.spoilage_risk) {
+        const risk = analysis.spoilage_risk || data.spoilage_risk;
+        const riskEl = document.getElementById('spoilageRisk');
+        if (riskEl) {
+            riskEl.textContent = `Risk: ${risk}`;
+            riskEl.className = 'sensor-ideal risk-' + risk.toLowerCase();
+        }
     }
 
-    // Color cards by risk
-    colorCard('healthCard', healthScore >= 70 ? 'green' : healthScore >= 40 ? 'orange' : 'red');
-
     // Recommendations
-    if (analysis.recommendations) {
+    if (analysis.recommendations && analysis.recommendations.length > 0) {
         renderRecommendations(analysis.recommendations);
+    } else {
+        const recs = document.getElementById('recommendations');
+        if (recs) recs.innerHTML = '<p class="empty-state">No recommendations yet — monitoring in progress</p>';
     }
 }
 
@@ -283,7 +456,12 @@ function renderRecommendations(recs) {
 
 function renderTimeline(timeline) {
     const container = document.getElementById('spoilageTimeline');
-    if (!container || !timeline || timeline.length === 0) return;
+    if (!container) return;
+
+    if (!timeline || timeline.length === 0) {
+        container.innerHTML = '<p class="empty-state">No timeline data available</p>';
+        return;
+    }
 
     let html = '';
     timeline.forEach((point, i) => {
@@ -301,16 +479,71 @@ function renderTimeline(timeline) {
     container.innerHTML = html;
 }
 
-// ===== CHARTS =====
-function updateHistory(history) {
-    if (!history || history.length === 0) return;
+// ===== CHARTS (REAL DATA ONLY) =====
+function clearCharts() {
+    if (sensorChart) { sensorChart.destroy(); sensorChart = null; }
+    if (healthChart) { healthChart.destroy(); healthChart = null; }
+    if (predictionChart) { predictionChart.destroy(); predictionChart = null; }
 
-    const reversed = [...history].reverse();
+    const sensorCtx = document.getElementById('sensorChart');
+    if (sensorCtx) {
+        const parent = sensorCtx.parentElement;
+        if (parent && !parent.querySelector('.empty-chart-msg')) {
+            const msg = document.createElement('p');
+            msg.className = 'empty-chart-msg empty-state';
+            msg.textContent = 'No sensor history — waiting for real data';
+            parent.appendChild(msg);
+        }
+    }
+
+    const healthCtx = document.getElementById('healthChart');
+    if (healthCtx) {
+        const parent = healthCtx.parentElement;
+        if (parent && !parent.querySelector('.empty-chart-msg')) {
+            const msg = document.createElement('p');
+            msg.className = 'empty-chart-msg empty-state';
+            msg.textContent = 'No health history — waiting for real data';
+            parent.appendChild(msg);
+        }
+    }
+
+    const predCtx = document.getElementById('predictionChart');
+    if (predCtx) {
+        const parent = predCtx.parentElement;
+        if (parent && !parent.querySelector('.empty-chart-msg')) {
+            const msg = document.createElement('p');
+            msg.className = 'empty-chart-msg empty-state';
+            msg.textContent = 'No predictions available yet';
+            parent.appendChild(msg);
+        }
+    }
+}
+
+function removeEmptyChartMessages() {
+    document.querySelectorAll('.empty-chart-msg').forEach(el => el.remove());
+}
+
+function updateHistory(history) {
+    if (!history || history.length === 0) {
+        clearCharts();
+        return;
+    }
+
+    // Filter to only valid data points
+    const validHistory = history.filter(h => isValidSensorData(h));
+    if (validHistory.length === 0) {
+        clearCharts();
+        return;
+    }
+
+    removeEmptyChartMessages();
+
+    const reversed = [...validHistory].reverse();
     const labels = reversed.map((_, i) => `#${i + 1}`);
     const temps = reversed.map(h => h.temperature);
     const humidities = reversed.map(h => h.humidity);
     const gases = reversed.map(h => h.gas);
-    const scores = reversed.map(h => h.health_score || 0);
+    const scores = reversed.map(h => typeof h.health_score === 'number' ? h.health_score : null);
 
     // Sensor Chart
     const sensorCtx = document.getElementById('sensorChart');
@@ -354,9 +587,10 @@ function updateHistory(history) {
         });
     }
 
-    // Health Chart
+    // Health Chart — only if we have valid health scores
+    const validScores = scores.filter(s => s !== null);
     const healthCtx = document.getElementById('healthChart');
-    if (healthCtx) {
+    if (healthCtx && validScores.length > 0) {
         if (healthChart) healthChart.destroy();
         healthChart = new Chart(healthCtx, {
             type: 'line',
@@ -371,8 +605,10 @@ function updateHistory(history) {
                     tension: 0.4,
                     pointRadius: 3,
                     pointBackgroundColor: scores.map(s =>
+                        s === null ? '#64748b' :
                         s >= 70 ? '#00ff88' : s >= 40 ? '#f59e0b' : '#ef4444'
-                    )
+                    ),
+                    spanGaps: true
                 }]
             },
             options: {
@@ -392,7 +628,22 @@ function updateHistory(history) {
 
 function updatePredictionChart(predictions) {
     const predCtx = document.getElementById('predictionChart');
-    if (!predCtx || !predictions || !predictions.labels) return;
+    if (!predCtx) return;
+
+    // Validate predictions have real data
+    if (!predictions || !predictions.labels || predictions.labels.length === 0) {
+        if (predictionChart) { predictionChart.destroy(); predictionChart = null; }
+        const parent = predCtx.parentElement;
+        if (parent && !parent.querySelector('.empty-chart-msg')) {
+            const msg = document.createElement('p');
+            msg.className = 'empty-chart-msg empty-state';
+            msg.textContent = 'No AI predictions available — need more real data';
+            parent.appendChild(msg);
+        }
+        return;
+    }
+
+    removeEmptyChartMessages();
 
     if (predictionChart) predictionChart.destroy();
     predictionChart = new Chart(predCtx, {
@@ -476,7 +727,7 @@ function loadCrops() {
             renderCrops(crops);
             populateCropSelectors(crops);
         })
-        .catch(err => console.error('Error loading crops:', err));
+        .catch(err => console.error('[Kishan Kavach] Error loading crops:', err));
 }
 
 function renderCrops(crops) {
@@ -557,6 +808,17 @@ function loadWeather() {
         .then(data => {
             const container = document.getElementById('weatherData');
             if (!container) return;
+
+            if (!data || data.error) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-cloud-sun-rain" style="font-size:2rem;margin-bottom:10px;opacity:0.5;"></i>
+                        <p>Weather data unavailable</p>
+                        <p><small>${data?.error || 'Please check your connection'}</small></p>
+                    </div>`;
+                return;
+            }
+
             container.innerHTML = `
                 <div class="weather-main glass-card">
                     <div class="weather-icon">
@@ -564,25 +826,31 @@ function loadWeather() {
                              alt="Weather" style="width:100px;height:100px;" 
                              onerror="this.style.display='none'">
                     </div>
-                    <div class="weather-temp">${data.temp?.toFixed(1) || '--'}°C</div>
+                    <div class="weather-temp">${typeof data.temp === 'number' ? data.temp.toFixed(1) + '°C' : '--'}</div>
                     <div class="weather-desc">${data.description || 'N/A'}</div>
                     <h3 style="margin-top:8px;color:var(--accent-cyan)">${data.city || city}</h3>
                     <div class="weather-details">
                         <div class="weather-detail">
                             <i class="fas fa-tint"></i>
-                            <div class="weather-detail-value">${data.humidity || '--'}%</div>
+                            <div class="weather-detail-value">${typeof data.humidity === 'number' ? data.humidity + '%' : '--'}</div>
                             <div class="weather-detail-label">Humidity</div>
                         </div>
                         <div class="weather-detail">
                             <i class="fas fa-wind"></i>
-                            <div class="weather-detail-value">${data.wind || '--'} m/s</div>
+                            <div class="weather-detail-value">${typeof data.wind === 'number' ? data.wind + ' m/s' : '--'}</div>
                             <div class="weather-detail-label">Wind</div>
                         </div>
                     </div>
                 </div>
             `;
         })
-        .catch(err => console.error('Error loading weather:', err));
+        .catch(err => {
+            console.error('[Kishan Kavach] Error loading weather:', err);
+            const container = document.getElementById('weatherData');
+            if (container) {
+                container.innerHTML = '<p class="empty-state">Failed to load weather data</p>';
+            }
+        });
 }
 
 // ===== ALERTS =====
@@ -593,8 +861,8 @@ function loadAlerts() {
             const container = document.getElementById('alertsList');
             if (!container) return;
 
-            if (alerts.length === 0) {
-                container.innerHTML = '<p class="empty-state">No alerts yet. The system will generate alerts when conditions become dangerous.</p>';
+            if (!alerts || alerts.length === 0) {
+                container.innerHTML = '<p class="empty-state">No alerts yet. Alerts will appear when real sensor data triggers dangerous conditions.</p>';
                 return;
             }
 
@@ -611,7 +879,7 @@ function loadAlerts() {
                 </div>
             `).join('');
         })
-        .catch(err => console.error('Error loading alerts:', err));
+        .catch(err => console.error('[Kishan Kavach] Error loading alerts:', err));
 }
 
 // ===== USERS (ADMIN) =====
@@ -621,6 +889,11 @@ function loadUsers() {
         .then(users => {
             const container = document.getElementById('usersList');
             if (!container) return;
+
+            if (!users || users.length === 0) {
+                container.innerHTML = '<p class="empty-state">No users found</p>';
+                return;
+            }
 
             container.innerHTML = users.map(u => `
                 <div class="user-item">
@@ -650,7 +923,7 @@ function loadUsers() {
                 </div>
             `).join('');
         })
-        .catch(err => console.error('Error loading users:', err));
+        .catch(err => console.error('[Kishan Kavach] Error loading users:', err));
 }
 
 function updateUserStatus(userId, status) {
@@ -684,7 +957,7 @@ function loadAccessRequests() {
             const container = document.getElementById('requestsList');
             if (!container) return;
 
-            if (requests.length === 0) {
+            if (!requests || requests.length === 0) {
                 container.innerHTML = '<p class="empty-state">No pending access requests</p>';
                 return;
             }
@@ -709,7 +982,7 @@ function loadAccessRequests() {
                 </div>
             `).join('');
         })
-        .catch(err => console.error('Error loading requests:', err));
+        .catch(err => console.error('[Kishan Kavach] Error loading requests:', err));
 }
 
 function updateAccess(requestId, status) {
@@ -789,7 +1062,7 @@ function loadStats() {
                 `;
             }
         })
-        .catch(err => console.error('Error loading stats:', err));
+        .catch(err => console.error('[Kishan Kavach] Error loading stats:', err));
 }
 
 // ===== DEVICE MANAGEMENT =====
@@ -837,38 +1110,6 @@ function deleteDevice(deviceId) {
             showToast('Device deleted!', 'warning');
             loadDevices();
         });
-}
-
-// ===== SIMULATE DATA =====
-function simulateData() {
-    const deviceId = currentDevice || 'ESP32_001';
-    const selector = document.getElementById('activeDevice');
-    const selectedOption = selector?.options[selector.selectedIndex];
-    let crop = 'tomato';
-
-    // Try to get crop from device info
-    if (selectedOption && selectedOption.text) {
-        const match = selectedOption.text.match(/\(([^)]+)\)/);
-        if (match) crop = match[1];
-    }
-
-    fetch('/api/simulate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ device_id: deviceId, crop: crop })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            showToast('📡 Simulated sensor data sent!', 'success');
-            // Data will be received via socket
-            setTimeout(() => loadDeviceData(deviceId), 500);
-        }
-    })
-    .catch(err => {
-        console.error('Simulate error:', err);
-        showToast('Error simulating data', 'error');
-    });
 }
 
 // ===== TOAST NOTIFICATION =====
