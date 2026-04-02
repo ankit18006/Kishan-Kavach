@@ -1,70 +1,61 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>रजिस्टर - Kishan Kavach</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Register - Kishan Kavach</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="auth-page">
     <div class="auth-container">
-        <div class="auth-bg-effects">
-            <div class="hero-glow glow-1"></div>
-            <div class="hero-glow glow-2"></div>
-        </div>
-        <div class="auth-card glass-card fade-up">
+        <div class="auth-card glass-card">
             <div class="auth-header">
-                <a href="/" class="auth-logo">
-                    <span class="logo-icon">🛡️</span>
-                    <span class="logo-text">Kishan <span class="gradient-text">Kavach</span></span>
-                </a>
-                <h2>रजिस्टर करें</h2>
-                <p>नया अकाउंट बनाएं</p>
+                <i class="fas fa-shield-alt auth-logo"></i>
+                <h1>Kishan Kavach</h1>
+                <p>Create your account</p>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
             {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">{{ message }}</div>
+            <div class="flash-message flash-{{ category }}">
+                <i class="fas fa-{% if category == 'error' %}exclamation-circle{% elif category == 'success' %}check-circle{% else %}info-circle{% endif %}"></i>
+                {{ message }}
+            </div>
             {% endfor %}
             {% endif %}
             {% endwith %}
 
             <form method="POST" class="auth-form">
                 <div class="form-group">
-                    <label for="name">👤 नाम</label>
-                    <input type="text" id="name" name="name" placeholder="अपना नाम डालें" required>
+                    <label><i class="fas fa-user"></i> Username</label>
+                    <input type="text" name="username" required placeholder="Choose a username">
                 </div>
                 <div class="form-group">
-                    <label for="email">📧 ईमेल</label>
-                    <input type="email" id="email" name="email" placeholder="अपना ईमेल डालें" required>
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" name="password" required placeholder="Create a password">
                 </div>
                 <div class="form-group">
-                    <label for="phone">📱 फोन नंबर</label>
-                    <input type="tel" id="phone" name="phone" placeholder="अपना फोन नंबर डालें">
+                    <label><i class="fas fa-phone"></i> Phone (WhatsApp)</label>
+                    <input type="tel" name="phone" placeholder="+91XXXXXXXXXX">
                 </div>
                 <div class="form-group">
-                    <label for="role">👥 भूमिका चुनें</label>
-                    <select id="role" name="role" required>
-                        <option value="farmer">🌾 किसान (Farmer)</option>
-                        <option value="owner">🏭 गोदाम मालिक (Warehouse Owner)</option>
+                    <label><i class="fas fa-user-tag"></i> Role</label>
+                    <select name="role" class="form-select">
+                        <option value="farmer">🌾 Farmer</option>
+                        <option value="owner">🏭 Storage Owner</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="password">🔒 पासवर्ड</label>
-                    <input type="password" id="password" name="password" placeholder="पासवर्ड बनाएं (कम से कम 6 अक्षर)" required minlength="6">
-                </div>
-                <div class="form-group">
-                    <label for="confirm_password">🔒 पासवर्ड पुष्टि</label>
-                    <input type="password" id="confirm_password" name="confirm_password" placeholder="पासवर्ड दोबारा डालें" required>
-                </div>
-                <button type="submit" class="btn btn-gradient btn-full">रजिस्टर करें</button>
+                <button type="submit" class="btn-submit btn-glow">
+                    <i class="fas fa-user-plus"></i> Register
+                </button>
             </form>
+
             <div class="auth-footer">
-                <p>पहले से अकाउंट है? <a href="{{ url_for('login') }}" class="gradient-text">लॉगिन करें</a></p>
-                <a href="/" class="back-link">← होम पेज पर जाएं</a>
+                <p>Already have an account? <a href="/login">Login here</a></p>
+                <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Back to Home</a>
             </div>
         </div>
     </div>
