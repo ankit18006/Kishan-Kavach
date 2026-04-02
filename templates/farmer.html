@@ -1,235 +1,260 @@
 <!DOCTYPE html>
-<html lang="{{ lang }}">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ t.farmer_dashboard }} - Kishan Kavach</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <title>Farmer Dashboard - Kishan Kavach</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="dashboard-page">
+    <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <span class="logo-icon">🛡️</span>
-            <span class="logo-text">Kishan <span class="gradient-text">Kavach</span></span>
+            <i class="fas fa-shield-alt"></i>
+            <h2>Kishan Kavach</h2>
+        </div>
+        <div class="sidebar-user">
+            <i class="fas fa-user-circle"></i>
+            <span>{{ session.username }}</span>
+            <small class="role-badge farmer-badge">Farmer</small>
         </div>
         <nav class="sidebar-nav">
-            <a href="#dashboard" class="sidebar-link active" data-section="dashboard">
-                <span class="sidebar-icon">📊</span> {{ t.dashboard }}
+            <a href="#" class="nav-item active" data-section="dashboard">
+                <i class="fas fa-tachometer-alt"></i> <span data-en="Dashboard" data-hi="डैशबोर्ड">Dashboard</span>
             </a>
-            <a href="#devices" class="sidebar-link" data-section="devices">
-                <span class="sidebar-icon">📡</span> {{ t.devices }}
+            <a href="#" class="nav-item" data-section="devices">
+                <i class="fas fa-microchip"></i> <span data-en="My Devices" data-hi="मेरे उपकरण">My Devices</span>
             </a>
-            <a href="#requests" class="sidebar-link" data-section="requests">
-                <span class="sidebar-icon">📨</span> {{ t.requests }}
+            <a href="#" class="nav-item" data-section="crops">
+                <i class="fas fa-seedling"></i> <span data-en="Crop Info" data-hi="फसल जानकारी">Crop Info</span>
             </a>
-            <a href="#weather" class="sidebar-link" data-section="weather">
-                <span class="sidebar-icon">🌦️</span> {{ t.weather }}
+            <a href="#" class="nav-item" data-section="weather">
+                <i class="fas fa-cloud-sun"></i> <span data-en="Weather" data-hi="मौसम">Weather</span>
+            </a>
+            <a href="#" class="nav-item" data-section="alerts">
+                <i class="fas fa-bell"></i> <span data-en="Alerts" data-hi="अलर्ट">Alerts</span>
+            </a>
+            <a href="#" class="nav-item" data-section="access">
+                <i class="fas fa-key"></i> <span data-en="Request Access" data-hi="एक्सेस अनुरोध">Request Access</span>
             </a>
         </nav>
         <div class="sidebar-footer">
-            <div class="lang-switch sidebar-lang">
-                <a href="{{ url_for('set_language', lang='en') }}" class="lang-btn {% if lang == 'en' %}active{% endif %}">EN</a>
-                <a href="{{ url_for('set_language', lang='hi') }}" class="lang-btn {% if lang == 'hi' %}active{% endif %}">हिं</a>
-            </div>
-            <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm btn-full">🚪 {{ t.logout }}</a>
+            <button class="lang-toggle-sm" onclick="toggleLanguage()">
+                <i class="fas fa-language"></i> <span id="langLabel">हिंदी</span>
+            </button>
+            <a href="/logout" class="nav-item logout-btn">
+                <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+            </a>
         </div>
     </aside>
 
-    <main class="main-content">
-        <header class="topbar">
-            <button class="sidebar-toggle" id="sidebarToggle">☰</button>
-            <div class="topbar-info"><h2>🌾 {{ t.farmer_dashboard }}</h2></div>
-            <div class="topbar-user">
-                <span class="user-role-badge farmer-badge">{{ t.farmer }}</span>
-                <span class="user-name">{{ user.name }}</span>
-            </div>
-        </header>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        <div class="flash-container">
-            {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <button class="menu-toggle" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+        <span class="mobile-title">Kishan Kavach</span>
+        <div class="mobile-actions">
+            <span class="connection-status" id="connectionStatus">
+                <i class="fas fa-circle"></i>
+            </span>
         </div>
-        {% endif %}
-        {% endwith %}
+    </header>
 
-        <!-- Dashboard -->
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Section -->
         <section class="content-section active" id="section-dashboard">
-            {% if approved_devices %}
-            <div class="section-title-bar">
-                <h3>📊 {{ t.live_data }}</h3>
-                <select id="deviceSelector" class="device-select">
-                    {% for dev in approved_devices %}
-                    <option value="{{ dev.device_id }}">{{ dev.device_id }} ({{ dev.owner_name }})</option>
-                    {% endfor %}
-                </select>
+            <div class="section-header">
+                <h1><i class="fas fa-tachometer-alt"></i> <span data-en="Dashboard" data-hi="डैशबोर्ड">Dashboard</span></h1>
+                <div class="header-actions">
+                    <select id="activeDevice" class="device-selector" onchange="switchDevice(this.value)">
+                        <option value="">Select Device</option>
+                    </select>
+                    <button class="btn-action" onclick="simulateData()">
+                        <i class="fas fa-play"></i> <span data-en="Simulate" data-hi="सिमुलेट">Simulate</span>
+                    </button>
+                </div>
             </div>
-            <div class="sensor-cards" id="sensorCards">
-                <div class="sensor-card glass-card" id="card-temp">
-                    <div class="sensor-icon">🌡️</div>
-                    <div class="sensor-info">
-                        <span class="sensor-label">{{ t.temperature }}</span>
-                        <span class="sensor-value" id="tempValue">--</span>
-                        <span class="sensor-unit">°C</span>
+
+            <!-- AI Insights Cards -->
+            <div class="ai-insights-grid">
+                <div class="insight-card glass-card" id="healthCard">
+                    <div class="insight-icon"><i class="fas fa-brain"></i></div>
+                    <div class="insight-content">
+                        <span class="insight-label" data-en="AI Health Score" data-hi="AI स्वास्थ्य स्कोर">AI Health Score</span>
+                        <span class="insight-value" id="healthScore">--</span>
+                        <div class="health-bar"><div class="health-fill" id="healthFill"></div></div>
                     </div>
                 </div>
-                <div class="sensor-card glass-card" id="card-humidity">
-                    <div class="sensor-icon">💧</div>
-                    <div class="sensor-info">
-                        <span class="sensor-label">{{ t.humidity }}</span>
-                        <span class="sensor-value" id="humidityValue">--</span>
-                        <span class="sensor-unit">%</span>
+                <div class="insight-card glass-card" id="daysCard">
+                    <div class="insight-icon"><i class="fas fa-hourglass-half"></i></div>
+                    <div class="insight-content">
+                        <span class="insight-label" data-en="Days Remaining" data-hi="शेष दिन">Days Remaining</span>
+                        <span class="insight-value" id="daysRemaining">--</span>
                     </div>
                 </div>
-                <div class="sensor-card glass-card" id="card-gas">
-                    <div class="sensor-icon">💨</div>
-                    <div class="sensor-info">
-                        <span class="sensor-label">{{ t.gas_level }}</span>
-                        <span class="sensor-value" id="gasValue">--</span>
-                        <span class="sensor-unit">PPM</span>
+                <div class="insight-card glass-card" id="riskCard">
+                    <div class="insight-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="insight-content">
+                        <span class="insight-label" data-en="Future Risk" data-hi="भविष्य का जोखिम">Future Risk</span>
+                        <span class="insight-value" id="futureRisk">--</span>
                     </div>
                 </div>
-                <div class="sensor-card glass-card" id="card-battery">
-                    <div class="sensor-icon">🔋</div>
-                    <div class="sensor-info">
-                        <span class="sensor-label">{{ t.battery }}</span>
-                        <span class="sensor-value" id="batteryValue">--</span>
-                        <span class="sensor-unit">%</span>
-                    </div>
-                </div>
-                <div class="sensor-card glass-card spoilage-card" id="card-spoilage">
-                    <div class="sensor-icon">⚠️</div>
-                    <div class="sensor-info">
-                        <span class="sensor-label">{{ t.spoilage_risk }}</span>
-                        <span class="sensor-value spoilage-badge" id="spoilageValue">--</span>
+                <div class="insight-card glass-card" id="conditionCard">
+                    <div class="insight-icon"><i class="fas fa-heartbeat"></i></div>
+                    <div class="insight-content">
+                        <span class="insight-label" data-en="Condition" data-hi="स्थिति">Condition</span>
+                        <span class="insight-value" id="condition">--</span>
                     </div>
                 </div>
             </div>
-            <div class="chart-container glass-card">
-                <h3>📈 {{ t.data_graph }}</h3>
-                <canvas id="sensorChart"></canvas>
+
+            <!-- Sensor Data Cards -->
+            <div class="sensor-grid">
+                <div class="sensor-card glass-card">
+                    <div class="sensor-icon temp-icon"><i class="fas fa-temperature-high"></i></div>
+                    <div class="sensor-data">
+                        <span class="sensor-label" data-en="Temperature" data-hi="तापमान">Temperature</span>
+                        <span class="sensor-value" id="temperature">--°C</span>
+                        <span class="sensor-ideal" id="idealTemp" data-en="Ideal: --" data-hi="आदर्श: --">Ideal: --</span>
+                    </div>
+                </div>
+                <div class="sensor-card glass-card">
+                    <div class="sensor-icon humidity-icon"><i class="fas fa-tint"></i></div>
+                    <div class="sensor-data">
+                        <span class="sensor-label" data-en="Humidity" data-hi="नमी">Humidity</span>
+                        <span class="sensor-value" id="humidity">--%</span>
+                        <span class="sensor-ideal" id="idealHumidity" data-en="Ideal: --" data-hi="आदर्श: --">Ideal: --</span>
+                    </div>
+                </div>
+                <div class="sensor-card glass-card">
+                    <div class="sensor-icon gas-icon"><i class="fas fa-wind"></i></div>
+                    <div class="sensor-data">
+                        <span class="sensor-label" data-en="Gas Level" data-hi="गैस स्तर">Gas Level</span>
+                        <span class="sensor-value" id="gasLevel">-- ppm</span>
+                        <span class="sensor-ideal" id="harmfulGas" data-en="Type: --" data-hi="प्रकार: --">Type: --</span>
+                    </div>
+                </div>
+                <div class="sensor-card glass-card">
+                    <div class="sensor-icon battery-icon"><i class="fas fa-battery-three-quarters"></i></div>
+                    <div class="sensor-data">
+                        <span class="sensor-label" data-en="Battery" data-hi="बैटरी">Battery</span>
+                        <span class="sensor-value" id="battery">--%</span>
+                        <span class="sensor-ideal" id="spoilageRisk" data-en="Risk: --" data-hi="जोखिम: --">Risk: --</span>
+                    </div>
+                </div>
             </div>
-            {% else %}
-            <div class="empty-state glass-card">
-                <div class="empty-icon">🔒</div>
-                <h3>{{ t.no_access }}</h3>
-                <p>{{ t.no_access_msg }}</p>
-                <a href="#requests" class="btn btn-gradient" onclick="switchSection('requests')">{{ t.send_request }} →</a>
+
+            <!-- Recommendations -->
+            <div class="recommendations-card glass-card">
+                <h3><i class="fas fa-lightbulb"></i> <span data-en="AI Recommendations" data-hi="AI सिफारिशें">AI Recommendations</span></h3>
+                <div id="recommendations" class="recommendations-list">
+                    <p class="empty-state" data-en="Select a device to see recommendations" 
+                       data-hi="सिफारिशें देखने के लिए उपकरण चुनें">Select a device to see recommendations</p>
+                </div>
             </div>
-            {% endif %}
+
+            <!-- Charts -->
+            <div class="charts-grid">
+                <div class="chart-card glass-card">
+                    <h3><i class="fas fa-chart-line"></i> <span data-en="Sensor History" data-hi="सेंसर इतिहास">Sensor History</span></h3>
+                    <canvas id="sensorChart"></canvas>
+                </div>
+                <div class="chart-card glass-card">
+                    <h3><i class="fas fa-chart-area"></i> <span data-en="AI Prediction" data-hi="AI पूर्वानुमान">AI Prediction</span></h3>
+                    <canvas id="predictionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Health Score Chart -->
+            <div class="chart-card glass-card full-width">
+                <h3><i class="fas fa-heartbeat"></i> <span data-en="Health Score Trend" data-hi="स्वास्थ्य स्कोर रुझान">Health Score Trend</span></h3>
+                <canvas id="healthChart"></canvas>
+            </div>
+
+            <!-- Spoilage Timeline -->
+            <div class="timeline-card glass-card full-width">
+                <h3><i class="fas fa-clock"></i> <span data-en="Spoilage Timeline" data-hi="खराबी समयरेखा">Spoilage Timeline</span></h3>
+                <div id="spoilageTimeline" class="timeline-container">
+                    <p class="empty-state">No data available</p>
+                </div>
+            </div>
         </section>
 
-        <!-- Devices -->
+        <!-- Devices Section -->
         <section class="content-section" id="section-devices">
-            <h3 class="section-heading">📡 {{ t.my_approved_devices }}</h3>
-            {% if approved_devices %}
-            <div class="table-container glass-card">
-                <table class="data-table">
-                    <thead><tr><th>{{ t.device_id }}</th><th>{{ t.owner_name }}</th><th>{{ t.status }}</th></tr></thead>
-                    <tbody>
-                        {% for dev in approved_devices %}
-                        <tr>
-                            <td><strong>{{ dev.device_id }}</strong></td>
-                            <td>{{ dev.owner_name }}</td>
-                            <td><span class="status-badge status-approved">✅ {{ t.approved }}</span></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="section-header">
+                <h1><i class="fas fa-microchip"></i> <span data-en="My Devices" data-hi="मेरे उपकरण">My Devices</span></h1>
             </div>
-            {% else %}
-            <div class="empty-state glass-card"><p>{{ t.no_access }}</p></div>
-            {% endif %}
-        </section>
-
-        <!-- Requests -->
-        <section class="content-section" id="section-requests">
-            <h3 class="section-heading">📨 {{ t.requests }}</h3>
-            <div class="form-card glass-card">
-                <h4>{{ t.send_new_request }}</h4>
-                <form method="POST" action="{{ url_for('api_request_access') }}" class="inline-form">
-                    <div class="form-group">
-                        <label>{{ t.select_owner }}</label>
-                        <select name="owner_id" required>
-                            <option value="">{{ t.select_owner_placeholder }}</option>
-                            {% for owner in owners %}
-                            <option value="{{ owner.id }}">{{ owner.name }} ({{ owner.email }})</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-gradient">{{ t.send_request }}</button>
-                </form>
-            </div>
-            <div class="table-container glass-card" style="margin-top:1.5rem">
-                <h4>{{ t.my_requests }}</h4>
-                {% if my_requests %}
-                <table class="data-table">
-                    <thead><tr><th>{{ t.owner_name }}</th><th>{{ t.status }}</th><th>{{ t.date }}</th></tr></thead>
-                    <tbody>
-                        {% for req in my_requests %}
-                        <tr>
-                            <td>{{ req.owner_name }}</td>
-                            <td>
-                                {% if req.status == 'pending' %}<span class="status-badge status-pending">⏳ {{ t.pending }}</span>
-                                {% elif req.status == 'approved' %}<span class="status-badge status-approved">✅ {{ t.approved }}</span>
-                                {% else %}<span class="status-badge status-rejected">❌ {{ t.rejected }}</span>{% endif %}
-                            </td>
-                            <td>{{ req.requested_at[:10] if req.requested_at else '' }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p class="empty-text">{{ t.no_requests }}</p>
-                {% endif %}
+            <div id="devicesList" class="devices-grid">
+                <p class="empty-state">Loading devices...</p>
             </div>
         </section>
 
-        <!-- Weather -->
+        <!-- Crops Section -->
+        <section class="content-section" id="section-crops">
+            <div class="section-header">
+                <h1><i class="fas fa-seedling"></i> <span data-en="Crop Intelligence" data-hi="फसल बुद्धिमत्ता">Crop Intelligence</span></h1>
+                <div class="header-actions">
+                    <input type="text" id="cropSearch" class="search-input" placeholder="Search crops..." oninput="searchCrops(this.value)">
+                </div>
+            </div>
+            <div id="cropsList" class="crops-grid">
+                <p class="empty-state">Loading crops...</p>
+            </div>
+        </section>
+
+        <!-- Weather Section -->
         <section class="content-section" id="section-weather">
-            <h3 class="section-heading">🌦️ {{ t.weather_info }}</h3>
-            <div class="weather-search glass-card">
-                <div class="form-group">
-                    <label>{{ t.city_name }}</label>
-                    <div class="inline-form">
-                        <input type="text" id="weatherCity" placeholder="{{ t.eg_delhi }}" value="Delhi">
-                        <button class="btn btn-gradient" onclick="fetchWeather()">{{ t.check_weather }}</button>
-                    </div>
+            <div class="section-header">
+                <h1><i class="fas fa-cloud-sun"></i> <span data-en="Weather" data-hi="मौसम">Weather</span></h1>
+                <div class="header-actions">
+                    <input type="text" id="weatherCity" class="search-input" placeholder="Enter city..." value="Delhi">
+                    <button class="btn-action" onclick="loadWeather()">
+                        <i class="fas fa-search"></i>
+                    </button>
                 </div>
             </div>
-            <div class="weather-card glass-card" id="weatherCard" style="display:none;margin-top:1.5rem">
-                <div class="weather-main">
-                    <img id="weatherIcon" src="" alt="weather" class="weather-icon-img">
-                    <div class="weather-info">
-                        <h3 id="weatherCityName">--</h3>
-                        <p id="weatherDesc">--</p>
-                    </div>
+            <div id="weatherData" class="weather-container">
+                <p class="empty-state">Loading weather...</p>
+            </div>
+        </section>
+
+        <!-- Alerts Section -->
+        <section class="content-section" id="section-alerts">
+            <div class="section-header">
+                <h1><i class="fas fa-bell"></i> <span data-en="Alerts" data-hi="अलर्ट">Alerts</span></h1>
+            </div>
+            <div id="alertsList" class="alerts-list">
+                <p class="empty-state">Loading alerts...</p>
+            </div>
+        </section>
+
+        <!-- Access Request Section -->
+        <section class="content-section" id="section-access">
+            <div class="section-header">
+                <h1><i class="fas fa-key"></i> <span data-en="Request Device Access" data-hi="उपकरण एक्सेस अनुरोध">Request Device Access</span></h1>
+            </div>
+            <div class="access-form glass-card">
+                <div class="form-group">
+                    <label><i class="fas fa-microchip"></i> Device ID</label>
+                    <input type="text" id="accessDeviceId" placeholder="Enter device ID (e.g., ESP32_001)">
                 </div>
-                <div class="weather-stats">
-                    <div class="weather-stat">
-                        <span class="weather-stat-label">🌡 {{ t.temperature }}</span>
-                        <span class="weather-stat-value" id="weatherTemp">--°C</span>
-                    </div>
-                    <div class="weather-stat">
-                        <span class="weather-stat-label">💧 {{ t.humidity }}</span>
-                        <span class="weather-stat-value" id="weatherHumidity">--%</span>
-                    </div>
-                </div>
+                <button class="btn-submit" onclick="requestAccess()">
+                    <i class="fas fa-paper-plane"></i> Request Access
+                </button>
             </div>
         </section>
     </main>
 
+    <script src="/static/script.js"></script>
     <script>
-        const USER_ROLE = 'farmer';
-        const USER_LANG = '{{ lang }}';
-        const DEVICE_DATA = {{ device_data | tojson }};
+        initApp('farmer');
     </script>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
