@@ -60,7 +60,7 @@
     </header>
 
     <main class="main-content">
-        <!-- ==================== DASHBOARD SECTION ==================== -->
+        <!-- Dashboard Section -->
         <section class="content-section active" id="section-dashboard">
             <div class="section-header">
                 <h1><i class="fas fa-tachometer-alt"></i> Owner Dashboard</h1>
@@ -74,10 +74,10 @@
                 </div>
             </div>
 
-            <!-- No Data Message (shown when no real IoT data available) -->
+            <!-- No Data Message (shown when no real data available) -->
             <div id="noDataMessage" style="display:none;"></div>
 
-            <!-- Dashboard Content (greyed out when awaiting data) -->
+            <!-- Dashboard Content (wrapped for awaiting-data state) -->
             <div id="dashboardContent">
                 <div class="ai-insights-grid">
                     <div class="insight-card glass-card" id="healthCard">
@@ -172,13 +172,13 @@
                 <div class="timeline-card glass-card full-width">
                     <h3><i class="fas fa-clock"></i> Spoilage Timeline</h3>
                     <div id="spoilageTimeline" class="timeline-container">
-                        <p class="empty-state">No timeline data available</p>
+                        <p class="empty-state">Waiting for real sensor data...</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- ==================== MANAGE DEVICES SECTION ==================== -->
+        <!-- Manage Devices Section -->
         <section class="content-section" id="section-devices">
             <div class="section-header">
                 <h1><i class="fas fa-microchip"></i> Manage Devices</h1>
@@ -219,7 +219,7 @@
             </div>
         </section>
 
-        <!-- ==================== CROP INFO SECTION ==================== -->
+        <!-- Crop Info Section -->
         <section class="content-section" id="section-crops">
             <div class="section-header">
                 <h1><i class="fas fa-seedling"></i> Crop Intelligence</h1>
@@ -230,7 +230,7 @@
             </div>
         </section>
 
-        <!-- ==================== ACCESS REQUESTS SECTION ==================== -->
+        <!-- Access Requests Section -->
         <section class="content-section" id="section-requests">
             <div class="section-header">
                 <h1><i class="fas fa-user-check"></i> Access Requests</h1>
@@ -240,7 +240,7 @@
             </div>
         </section>
 
-        <!-- ==================== WEATHER SECTION ==================== -->
+        <!-- Weather Section -->
         <section class="content-section" id="section-weather">
             <div class="section-header">
                 <h1><i class="fas fa-cloud-sun"></i> Weather</h1>
@@ -254,7 +254,7 @@
             </div>
         </section>
 
-        <!-- ==================== ALERTS SECTION ==================== -->
+        <!-- Alerts Section -->
         <section class="content-section" id="section-alerts">
             <div class="section-header">
                 <h1><i class="fas fa-bell"></i> Alerts</h1>
