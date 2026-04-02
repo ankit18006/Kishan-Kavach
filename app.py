@@ -543,6 +543,16 @@ def handle_sensor_data(data):
         insert_sensor_data(sensor_record)
         check_and_send_alert(device_id, analysis, crop)
 
+        # AI Relay Control - send command back to ESP32
+        relay_cmd = get_relay_command(
+            analysis['spoilage_risk'],
+            analysis['health_score']
+        )
+        emit('relay_control', {
+            'device_id': device_id,
+            'relay': relay_cmd
+        })
+
         broadcast_data = {
             **sensor_record,
             'analysis': analysis,
@@ -558,12 +568,43 @@ def handle_sensor_data(data):
         print(
             f"[Sensor] {device_id} | T:{temperature} H:{humidity} "
             f"G:{gas} | Score:{analysis['health_score']} "
-            f"Risk:{analysis['spoilage_risk']}"
+            f"Risk:{analysis['spoilage_risk']} | Relay:{relay_cmd}"
         )
 
     except Exception as e:
         print(f"[Error] Processing sensor data: {e}")
         emit('error', {'message': str(e)})
+
+
+# ======================== ADD TO app.py ========================
+# Add these BELOW the existing @socketio.on('sensor_data') handler
+
+@socketio.on('set_crop')
+def handle_set_crop(data):
+    """Handle crop change from web dashboard"""
+    device_id = data.get('device_id', '')
+    crop = data.get('crop', 'wheat')
+
+    # Update database
+    update_device_crop(device_id, crop)
+
+    # Broadcast to ALL clients (including ESP32)
+    socketio.emit('crop_update', {
+        'device_id': device_id,
+        'crop': crop
+    })
+
+    print(f"[Crop Update] {device_id} → {crop}")
+
+
+def get_relay_command(spoilage_risk, health_score):
+    """AI decides relay state"""
+    if spoilage_risk == 'HIGH' or health_score < 40:
+        return 'ON'
+    elif spoilage_risk == 'MEDIUM' or health_score < 60:
+        return 'ON'
+    else:
+        return 'OFF'
 
 
 @socketio.on('request_data')
