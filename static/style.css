@@ -1084,6 +1084,139 @@ canvas { max-height: 300px; }
     to { transform: translateY(0); opacity: 1; }
 }
 
+/* ======================================================
+   NEW: PRODUCTION NO-DATA & DEVICE OFFLINE STATES
+   (Added for real-data-only system — no simulation)
+   ====================================================== */
+
+/* --- No Data Message Container --- */
+#noDataMessage {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 300px;
+}
+
+.no-data-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--text-secondary);
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px dashed rgba(100, 116, 139, 0.4);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.no-data-container .no-data-icon {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    opacity: 0.35;
+    color: var(--text-muted);
+    animation: pulse-slow 2.5s ease-in-out infinite;
+}
+
+.no-data-container h3 {
+    font-size: 1.4rem;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.no-data-container p {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+@keyframes pulse-slow {
+    0%, 100% { opacity: 0.35; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+/* --- Device Status Badge --- */
+.device-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.device-status-badge.offline {
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--accent-red);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.device-status-badge.offline i.fa-circle {
+    color: var(--accent-red);
+    font-size: 0.5rem;
+    animation: blink-dot 1.5s ease-in-out infinite;
+}
+
+.device-status-badge.online {
+    background: rgba(0, 255, 136, 0.12);
+    color: var(--accent-green);
+    border: 1px solid rgba(0, 255, 136, 0.25);
+}
+
+.device-status-badge.online i.fa-circle {
+    color: var(--accent-green);
+    font-size: 0.5rem;
+    animation: none;
+}
+
+@keyframes blink-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+}
+
+/* --- Awaiting Data State (greys out dashboard) --- */
+.awaiting-data {
+    opacity: 0.25;
+    pointer-events: none;
+    filter: grayscale(0.6) blur(1px);
+    transition: all 0.4s ease;
+    user-select: none;
+}
+
+/* --- Empty Chart Message --- */
+.empty-chart-msg {
+    text-align: center;
+    padding: 24px 16px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-style: italic;
+    line-height: 1.6;
+}
+
+/* --- Sensor Card No-Data State --- */
+.sensor-value.no-data {
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+/* --- Insight Value No-Data State --- */
+.insight-value.no-data {
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
 /* ===== MOBILE RESPONSIVE ===== */
 @media (max-width: 768px) {
     .sidebar {
@@ -1117,6 +1250,25 @@ canvas { max-height: 300px; }
     .section-header { flex-direction: column; align-items: flex-start; }
     .device-selector { width: 100%; }
     .weather-details { flex-direction: column; gap: 16px; }
+
+    /* New: No-data responsive */
+    .no-data-container {
+        padding: 40px 16px;
+        max-width: 100%;
+    }
+    .no-data-container .no-data-icon {
+        font-size: 2.5rem;
+    }
+    .no-data-container h3 {
+        font-size: 1.15rem;
+    }
+    .no-data-container p {
+        font-size: 0.85rem;
+    }
+    .device-status-badge {
+        font-size: 0.7rem;
+        padding: 5px 12px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1126,4 +1278,12 @@ canvas { max-height: 300px; }
     .crops-grid { grid-template-columns: 1fr; }
     .nav-links { gap: 8px; }
     .btn-nav { padding: 6px 12px; font-size: 0.85rem; }
+
+    /* New: No-data extra small */
+    .no-data-container {
+        padding: 30px 12px;
+    }
+    .no-data-container .no-data-icon {
+        font-size: 2rem;
+    }
 }
