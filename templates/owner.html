@@ -60,7 +60,7 @@
     </header>
 
     <main class="main-content">
-        <!-- Dashboard Section (same as farmer but with more controls) -->
+        <!-- ==================== DASHBOARD SECTION ==================== -->
         <section class="content-section active" id="section-dashboard">
             <div class="section-header">
                 <h1><i class="fas fa-tachometer-alt"></i> Owner Dashboard</h1>
@@ -68,111 +68,117 @@
                     <select id="activeDevice" class="device-selector" onchange="switchDevice(this.value)">
                         <option value="">Select Device</option>
                     </select>
-                    <button class="btn-action" onclick="simulateData()">
-                        <i class="fas fa-play"></i> Simulate
-                    </button>
+                    <span id="deviceStatusBadge" class="device-status-badge offline">
+                        <i class="fas fa-circle"></i> Device offline
+                    </span>
                 </div>
             </div>
 
-            <div class="ai-insights-grid">
-                <div class="insight-card glass-card" id="healthCard">
-                    <div class="insight-icon"><i class="fas fa-brain"></i></div>
-                    <div class="insight-content">
-                        <span class="insight-label">AI Health Score</span>
-                        <span class="insight-value" id="healthScore">--</span>
-                        <div class="health-bar"><div class="health-fill" id="healthFill"></div></div>
-                    </div>
-                </div>
-                <div class="insight-card glass-card" id="daysCard">
-                    <div class="insight-icon"><i class="fas fa-hourglass-half"></i></div>
-                    <div class="insight-content">
-                        <span class="insight-label">Days Remaining</span>
-                        <span class="insight-value" id="daysRemaining">--</span>
-                    </div>
-                </div>
-                <div class="insight-card glass-card" id="riskCard">
-                    <div class="insight-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                    <div class="insight-content">
-                        <span class="insight-label">Future Risk</span>
-                        <span class="insight-value" id="futureRisk">--</span>
-                    </div>
-                </div>
-                <div class="insight-card glass-card" id="conditionCard">
-                    <div class="insight-icon"><i class="fas fa-heartbeat"></i></div>
-                    <div class="insight-content">
-                        <span class="insight-label">Condition</span>
-                        <span class="insight-value" id="condition">--</span>
-                    </div>
-                </div>
-            </div>
+            <!-- No Data Message (shown when no real IoT data available) -->
+            <div id="noDataMessage" style="display:none;"></div>
 
-            <div class="sensor-grid">
-                <div class="sensor-card glass-card">
-                    <div class="sensor-icon temp-icon"><i class="fas fa-temperature-high"></i></div>
-                    <div class="sensor-data">
-                        <span class="sensor-label">Temperature</span>
-                        <span class="sensor-value" id="temperature">--°C</span>
-                        <span class="sensor-ideal" id="idealTemp">Ideal: --</span>
+            <!-- Dashboard Content (greyed out when awaiting data) -->
+            <div id="dashboardContent">
+                <div class="ai-insights-grid">
+                    <div class="insight-card glass-card" id="healthCard">
+                        <div class="insight-icon"><i class="fas fa-brain"></i></div>
+                        <div class="insight-content">
+                            <span class="insight-label">AI Health Score</span>
+                            <span class="insight-value" id="healthScore">--</span>
+                            <div class="health-bar"><div class="health-fill" id="healthFill"></div></div>
+                        </div>
+                    </div>
+                    <div class="insight-card glass-card" id="daysCard">
+                        <div class="insight-icon"><i class="fas fa-hourglass-half"></i></div>
+                        <div class="insight-content">
+                            <span class="insight-label">Days Remaining</span>
+                            <span class="insight-value" id="daysRemaining">--</span>
+                        </div>
+                    </div>
+                    <div class="insight-card glass-card" id="riskCard">
+                        <div class="insight-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="insight-content">
+                            <span class="insight-label">Future Risk</span>
+                            <span class="insight-value" id="futureRisk">--</span>
+                        </div>
+                    </div>
+                    <div class="insight-card glass-card" id="conditionCard">
+                        <div class="insight-icon"><i class="fas fa-heartbeat"></i></div>
+                        <div class="insight-content">
+                            <span class="insight-label">Condition</span>
+                            <span class="insight-value" id="condition">--</span>
+                        </div>
                     </div>
                 </div>
-                <div class="sensor-card glass-card">
-                    <div class="sensor-icon humidity-icon"><i class="fas fa-tint"></i></div>
-                    <div class="sensor-data">
-                        <span class="sensor-label">Humidity</span>
-                        <span class="sensor-value" id="humidity">--%</span>
-                        <span class="sensor-ideal" id="idealHumidity">Ideal: --</span>
+
+                <div class="sensor-grid">
+                    <div class="sensor-card glass-card">
+                        <div class="sensor-icon temp-icon"><i class="fas fa-temperature-high"></i></div>
+                        <div class="sensor-data">
+                            <span class="sensor-label">Temperature</span>
+                            <span class="sensor-value" id="temperature">--</span>
+                            <span class="sensor-ideal" id="idealTemp">Ideal: --</span>
+                        </div>
+                    </div>
+                    <div class="sensor-card glass-card">
+                        <div class="sensor-icon humidity-icon"><i class="fas fa-tint"></i></div>
+                        <div class="sensor-data">
+                            <span class="sensor-label">Humidity</span>
+                            <span class="sensor-value" id="humidity">--</span>
+                            <span class="sensor-ideal" id="idealHumidity">Ideal: --</span>
+                        </div>
+                    </div>
+                    <div class="sensor-card glass-card">
+                        <div class="sensor-icon gas-icon"><i class="fas fa-wind"></i></div>
+                        <div class="sensor-data">
+                            <span class="sensor-label">Gas Level</span>
+                            <span class="sensor-value" id="gasLevel">--</span>
+                            <span class="sensor-ideal" id="harmfulGas">Type: --</span>
+                        </div>
+                    </div>
+                    <div class="sensor-card glass-card">
+                        <div class="sensor-icon battery-icon"><i class="fas fa-battery-three-quarters"></i></div>
+                        <div class="sensor-data">
+                            <span class="sensor-label">Battery</span>
+                            <span class="sensor-value" id="battery">--</span>
+                            <span class="sensor-ideal" id="spoilageRisk">Risk: --</span>
+                        </div>
                     </div>
                 </div>
-                <div class="sensor-card glass-card">
-                    <div class="sensor-icon gas-icon"><i class="fas fa-wind"></i></div>
-                    <div class="sensor-data">
-                        <span class="sensor-label">Gas Level</span>
-                        <span class="sensor-value" id="gasLevel">-- ppm</span>
-                        <span class="sensor-ideal" id="harmfulGas">Type: --</span>
+
+                <div class="recommendations-card glass-card">
+                    <h3><i class="fas fa-lightbulb"></i> AI Recommendations</h3>
+                    <div id="recommendations" class="recommendations-list">
+                        <p class="empty-state">Waiting for real sensor data...</p>
                     </div>
                 </div>
-                <div class="sensor-card glass-card">
-                    <div class="sensor-icon battery-icon"><i class="fas fa-battery-three-quarters"></i></div>
-                    <div class="sensor-data">
-                        <span class="sensor-label">Battery</span>
-                        <span class="sensor-value" id="battery">--%</span>
-                        <span class="sensor-ideal" id="spoilageRisk">Risk: --</span>
+
+                <div class="charts-grid">
+                    <div class="chart-card glass-card">
+                        <h3><i class="fas fa-chart-line"></i> Sensor History</h3>
+                        <canvas id="sensorChart"></canvas>
+                    </div>
+                    <div class="chart-card glass-card">
+                        <h3><i class="fas fa-chart-area"></i> AI Prediction</h3>
+                        <canvas id="predictionChart"></canvas>
                     </div>
                 </div>
-            </div>
 
-            <div class="recommendations-card glass-card">
-                <h3><i class="fas fa-lightbulb"></i> AI Recommendations</h3>
-                <div id="recommendations" class="recommendations-list">
-                    <p class="empty-state">Select a device to see recommendations</p>
+                <div class="chart-card glass-card full-width">
+                    <h3><i class="fas fa-heartbeat"></i> Health Score Trend</h3>
+                    <canvas id="healthChart"></canvas>
                 </div>
-            </div>
 
-            <div class="charts-grid">
-                <div class="chart-card glass-card">
-                    <h3><i class="fas fa-chart-line"></i> Sensor History</h3>
-                    <canvas id="sensorChart"></canvas>
-                </div>
-                <div class="chart-card glass-card">
-                    <h3><i class="fas fa-chart-area"></i> AI Prediction</h3>
-                    <canvas id="predictionChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card glass-card full-width">
-                <h3><i class="fas fa-heartbeat"></i> Health Score Trend</h3>
-                <canvas id="healthChart"></canvas>
-            </div>
-
-            <div class="timeline-card glass-card full-width">
-                <h3><i class="fas fa-clock"></i> Spoilage Timeline</h3>
-                <div id="spoilageTimeline" class="timeline-container">
-                    <p class="empty-state">No data available</p>
+                <div class="timeline-card glass-card full-width">
+                    <h3><i class="fas fa-clock"></i> Spoilage Timeline</h3>
+                    <div id="spoilageTimeline" class="timeline-container">
+                        <p class="empty-state">No timeline data available</p>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Manage Devices Section -->
+        <!-- ==================== MANAGE DEVICES SECTION ==================== -->
         <section class="content-section" id="section-devices">
             <div class="section-header">
                 <h1><i class="fas fa-microchip"></i> Manage Devices</h1>
@@ -181,7 +187,6 @@
                 </button>
             </div>
 
-            <!-- Add Device Form -->
             <div class="add-device-form glass-card" id="addDeviceForm" style="display:none;">
                 <h3>Add New Device</h3>
                 <div class="form-row">
@@ -214,7 +219,7 @@
             </div>
         </section>
 
-        <!-- Crop Info Section -->
+        <!-- ==================== CROP INFO SECTION ==================== -->
         <section class="content-section" id="section-crops">
             <div class="section-header">
                 <h1><i class="fas fa-seedling"></i> Crop Intelligence</h1>
@@ -225,7 +230,7 @@
             </div>
         </section>
 
-        <!-- Access Requests Section -->
+        <!-- ==================== ACCESS REQUESTS SECTION ==================== -->
         <section class="content-section" id="section-requests">
             <div class="section-header">
                 <h1><i class="fas fa-user-check"></i> Access Requests</h1>
@@ -235,7 +240,7 @@
             </div>
         </section>
 
-        <!-- Weather Section -->
+        <!-- ==================== WEATHER SECTION ==================== -->
         <section class="content-section" id="section-weather">
             <div class="section-header">
                 <h1><i class="fas fa-cloud-sun"></i> Weather</h1>
@@ -249,7 +254,7 @@
             </div>
         </section>
 
-        <!-- Alerts Section -->
+        <!-- ==================== ALERTS SECTION ==================== -->
         <section class="content-section" id="section-alerts">
             <div class="section-header">
                 <h1><i class="fas fa-bell"></i> Alerts</h1>
