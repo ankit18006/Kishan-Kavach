@@ -580,14 +580,14 @@ def handle_sensor_data(data):
         battery = float(data.get('battery', 100))
         crop = data.get('crop', 'wheat')
 
-        # ===== AUTO REGISTER DEVICE IF NOT EXISTS =====
+        # ===== AUTO REGISTER DEVICE =====
         existing_devices = get_all_devices()
         device_exists = any(d['device_id'] == device_id for d in existing_devices)
+
         if not device_exists:
-            # Auto-add device (owner_id=None, will be claimed later)
             add_device(device_id, f"Auto-{device_id}", "Auto-detected", crop, None)
-            print(f"[Auto Register] Device {device_id} auto-registered!")
-            # Notify all clients that a new device was added
+            print(f"[Auto Register] Device {device_id} added!")
+
             socketio.emit('device_added', {
                 'device_id': device_id,
                 'name': f"Auto-{device_id}",
@@ -595,26 +595,65 @@ def handle_sensor_data(data):
                 'crop': crop
             })
 
-# ======================== ADD TO app.py ========================
-# Add these BELOW the existing @socketio.on('sensor_data') handler
+        # ===== SPOILAGE LOGIC =====
+        if temperature > 30 or humidity > 80 or gas > 400:
+            spoilage = "HIGH"
+        elif temperature > 25:
+            spoilage = "MEDIUM"
+        else:
+            spoilage = "LOW"
+
+        # ===== SAVE DATA =====
+        insert_sensor_data({
+            "device_id": device_id,
+            "temperature": temperature,
+            "humidity": humidity,
+            "gas": gas,
+            "battery": battery,
+            "crop": crop,
+            "spoilage_risk": spoilage,
+            "health_score": 80,
+            "days_remaining": 20,
+            "future_risk": spoilage
+        })
+
+        # ===== SEND TO FRONTEND =====
+        socketio.emit('sensor_update', {
+            "device_id": device_id,
+            "temperature": temperature,
+            "humidity": humidity,
+            "gas": gas,
+            "battery": battery,
+            "spoilage_risk": spoilage,
+            "health_score": 80,
+            "days_remaining": 20,
+            "future_risk": spoilage
+        })
+
+    except Exception as e:
+        print("❌ Sensor Error:", e)
+
+
+# ======================== FIXED POSITION ========================
 
 @socketio.on('set_crop')
 def handle_set_crop(data):
     """Handle crop change from web dashboard"""
-    device_id = data.get('device_id', '')
-    crop = data.get('crop', 'wheat')
+    try:
+        device_id = data.get('device_id', '')
+        crop = data.get('crop', 'wheat')
 
-    # Update database
-    update_device_crop(device_id, crop)
+        update_device_crop(device_id, crop)
 
-    # Broadcast to ALL clients (including ESP32)
-    socketio.emit('crop_update', {
-        'device_id': device_id,
-        'crop': crop
-    })
+        socketio.emit('crop_update', {
+            'device_id': device_id,
+            'crop': crop
+        })
 
-    print(f"[Crop Update] {device_id} → {crop}")
+        print(f"[Crop Update] {device_id} → {crop}")
 
+    except Exception as e:
+        print("❌ Crop Error:", e)
 
 def get_relay_command(spoilage_risk, health_score):
     """AI decides relay state"""
