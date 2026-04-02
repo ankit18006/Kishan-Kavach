@@ -6,8 +6,8 @@ DB_PATH = os.path.join(os.path.dirname(__file__), 'kishan_kavach.db')
 
 
 def get_db():
-    """Get database connection - thread safe"""
-    conn = sqlite3.connect(DB_PATH, timeout=30)
+    """Get database connection - thread safe for gunicorn"""
+    conn = sqlite3.connect(DB_PATH, timeout=30, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA busy_timeout=30000")
