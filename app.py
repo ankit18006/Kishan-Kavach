@@ -1,15 +1,18 @@
 """
 Kishan Kavach - Smart Agriculture IoT Platform
-Main Application
+Main Application - Production Ready for Render
 """
 
 import os
 import json
 import time
 import random
-import requests
+import requests as http_requests
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
+from flask import (
+    Flask, render_template, request, jsonify,
+    session, redirect, url_for, flash
+)
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 
@@ -21,14 +24,33 @@ from database import (
     add_device, update_device_crop, delete_device, delete_user,
     get_alert_history, insert_alert, get_system_stats, get_user_by_id
 )
-from crop_data import get_crop_info, get_all_crops, get_crop_list, search_crops, CROP_DATABASE
+from crop_data import (
+    get_crop_info, get_all_crops, get_crop_list,
+    search_crops, CROP_DATABASE
+)
 from ai_engine import AIEngine
 from auth import login_required, role_required, admin_required
 
+# ======================== APP SETUP ========================
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'kishan-kavach-secret-key-2024')
+app.config['SECRET_KEY'] = os.environ.get(
+    'SECRET_KEY', 'kishan-kavach-secret-key-2024'
+)
+
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+
+# SocketIO - auto-detect best async mode for deployment
+# Will use 'gevent' if available, falls back to 'threading'
+socketio = SocketIO(
+    app,
+    cors_allowed_origins="*",
+    async_mode=None,          # AUTO DETECT - key fix
+    logger=False,
+    engineio_logger=False,
+    ping_timeout=60,
+    ping_interval=25
+)
 
 # Alert cooldown tracking
 alert_cooldowns = {}
@@ -38,12 +60,17 @@ ALERT_COOLDOWN_SECONDS = 300  # 5 minutes
 WEATHER_API_KEY = os.environ.get('WEATHER_API_KEY', '')
 
 
+# ======================== HELPER FUNCTIONS ========================
+
 def get_weather(city='Delhi'):
     """Get weather data from OpenWeatherMap API"""
     try:
         if WEATHER_API_KEY:
-            url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}&units=metric"
-            resp = requests.get(url, timeout=5)
+            url = (
+                f"http://api.openweathermap.org/data/2.5/weather"
+                f"?q={city}&appid={WEATHER_API_KEY}&units=metric"
+            )
+            resp = http_requests.get(url, timeout=5)
             if resp.status_code == 200:
                 data = resp.json()
                 return {
@@ -54,8 +81,9 @@ def get_weather(city='Delhi'):
                     'icon': data['weather'][0]['icon'],
                     'wind': data['wind']['speed']
                 }
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[Weather API Error] {e}")
+
     # Return mock data if API not available
     return {
         'city': city,
@@ -68,12 +96,16 @@ def get_weather(city='Delhi'):
 
 
 def send_whatsapp_alert(phone, message):
-    """Send WhatsApp alert (placeholder - integrate with Twilio/CallMeBot)"""
+    """
+    Send WhatsApp alert placeholder.
+    Integrate with Twilio or CallMeBot for production.
+    
+    CallMeBot example:
+    url = f"https://api.callmebot.com/whatsapp.php?phone={phone}&text={message}&apikey=YOUR_KEY"
+    http_requests.get(url, timeout=10)
+    """
     try:
-        # CallMeBot integration example:
-        # url = f"https://api.callmebot.com/whatsapp.php?phone={phone}&text={message}&apikey=YOUR_KEY"
-        # requests.get(url, timeout=10)
-        print(f"[WhatsApp Alert] To: {phone} | Message: {message}")
+        print(f"[WhatsApp Alert] To: {phone} | Message: {message[:100]}...")
         return True
     except Exception as e:
         print(f"[WhatsApp Error] {e}")
@@ -85,7 +117,7 @@ def check_and_send_alert(device_id, analysis, crop_name):
     global alert_cooldowns
     now = time.time()
 
-    if analysis['spoilage_risk'] == 'HIGH':
+    if analysis.get('spoilage_risk') == 'HIGH':
         last_alert = alert_cooldowns.get(device_id, 0)
         if now - last_alert > ALERT_COOLDOWN_SECONDS:
             message = (
@@ -100,15 +132,12 @@ def check_and_send_alert(device_id, analysis, crop_name):
 
             insert_alert(device_id, 'HIGH_RISK', message)
             alert_cooldowns[device_id] = now
-
-            # Send WhatsApp (would need real phone numbers from device owner)
             send_whatsapp_alert('+919999999999', message)
-
             return True
     return False
 
 
-# ======================== ROUTES ========================
+# ======================== PAGE ROUTES ========================
 
 @app.route('/')
 def index():
@@ -138,6 +167,7 @@ def login():
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['role'] = user['role']
+            session.permanent = True
 
             if user['role'] == 'admin':
                 return redirect(url_for('admin_dashboard'))
@@ -163,6 +193,10 @@ def register():
             flash('Username and password required!', 'error')
             return render_template('register.html')
 
+        if len(password) < 4:
+            flash('Password must be at least 4 characters!', 'error')
+            return render_template('register.html')
+
         if create_user(username, password, role, phone):
             flash('Registration successful! Waiting for approval.', 'success')
             return redirect(url_for('login'))
@@ -178,7 +212,7 @@ def logout():
     return redirect(url_for('index'))
 
 
-# ======================== FARMER DASHBOARD ========================
+# ======================== DASHBOARD ROUTES ========================
 
 @app.route('/farmer')
 @login_required
@@ -188,8 +222,6 @@ def farmer_dashboard():
     return render_template('farmer.html')
 
 
-# ======================== OWNER DASHBOARD ========================
-
 @app.route('/owner')
 @login_required
 def owner_dashboard():
@@ -197,8 +229,6 @@ def owner_dashboard():
         return redirect(url_for('login'))
     return render_template('owner.html')
 
-
-# ======================== ADMIN DASHBOARD ========================
 
 @app.route('/admin')
 @admin_required
@@ -216,17 +246,20 @@ def api_crops():
 
 @app.route('/api/crops/list')
 def api_crops_list():
+    """Get flat list of all crops"""
     return jsonify(get_crop_list())
 
 
 @app.route('/api/crops/search')
 def api_crops_search():
+    """Search crops by name"""
     query = request.args.get('q', '')
     return jsonify(search_crops(query))
 
 
 @app.route('/api/crop/<crop_key>')
 def api_crop_info(crop_key):
+    """Get info for a specific crop"""
     info = get_crop_info(crop_key)
     if info:
         return jsonify(info)
@@ -236,6 +269,7 @@ def api_crop_info(crop_key):
 @app.route('/api/devices')
 @login_required
 def api_devices():
+    """Get devices based on user role"""
     role = session.get('role')
     user_id = session.get('user_id')
     if role == 'admin':
@@ -250,26 +284,34 @@ def api_devices():
 @app.route('/api/device/<device_id>/data')
 @login_required
 def api_device_data(device_id):
+    """Get full device data with AI analysis"""
     latest = get_latest_sensor_data(device_id)
     history = get_sensor_history(device_id, 50)
-    
+
+    analysis = {}
+    predictions = {}
+    timeline = []
+
     if latest:
         crop_key = latest.get('crop', 'wheat')
         analysis = AIEngine.full_analysis(
-            latest['temperature'], latest['humidity'], latest['gas'],
-            crop_key, history
+            latest['temperature'],
+            latest['humidity'],
+            latest['gas'],
+            crop_key,
+            history
         )
         predictions = AIEngine.generate_prediction_data(
-            latest['temperature'], latest['humidity'], latest['gas'],
-            analysis['trend']
+            latest['temperature'],
+            latest['humidity'],
+            latest['gas'],
+            analysis.get('trend', 'stable')
         )
         timeline = AIEngine.generate_spoilage_timeline(
-            analysis['health_score'], analysis['days_remaining'], crop_key
+            analysis.get('health_score', 50),
+            analysis.get('days_remaining', 30),
+            crop_key
         )
-    else:
-        analysis = {}
-        predictions = {}
-        timeline = []
 
     return jsonify({
         'latest': latest,
@@ -283,22 +325,33 @@ def api_device_data(device_id):
 @app.route('/api/device/add', methods=['POST'])
 @login_required
 def api_add_device():
-    data = request.json
+    """Add a new device"""
+    data = request.get_json(force=True)
     device_id = data.get('device_id', '').strip()
     name = data.get('name', '').strip()
     location = data.get('location', '').strip()
     crop = data.get('crop', 'wheat').strip()
     owner_id = session.get('user_id')
 
+    if not device_id or not name:
+        return jsonify({
+            'success': False,
+            'error': 'Device ID and name required'
+        }), 400
+
     if add_device(device_id, name, location, crop, owner_id):
         return jsonify({'success': True})
-    return jsonify({'success': False, 'error': 'Device ID already exists'}), 400
+    return jsonify({
+        'success': False,
+        'error': 'Device ID already exists'
+    }), 400
 
 
 @app.route('/api/device/<device_id>/crop', methods=['PUT'])
 @login_required
 def api_update_crop(device_id):
-    data = request.json
+    """Update device crop"""
+    data = request.get_json(force=True)
     crop = data.get('crop', 'wheat')
     update_device_crop(device_id, crop)
     return jsonify({'success': True})
@@ -307,6 +360,7 @@ def api_update_crop(device_id):
 @app.route('/api/device/<device_id>/delete', methods=['DELETE'])
 @login_required
 def api_delete_device(device_id):
+    """Delete a device"""
     delete_device(device_id)
     return jsonify({'success': True})
 
@@ -314,14 +368,18 @@ def api_delete_device(device_id):
 @app.route('/api/users')
 @admin_required
 def api_users():
+    """Get all users (admin only)"""
     return jsonify(get_all_users())
 
 
 @app.route('/api/user/<int:user_id>/status', methods=['PUT'])
 @login_required
 def api_update_user_status(user_id):
-    data = request.json
+    """Update user approval status"""
+    data = request.get_json(force=True)
     status = data.get('status', 'pending')
+    if status not in ['approved', 'rejected', 'pending']:
+        return jsonify({'error': 'Invalid status'}), 400
     update_user_status(user_id, status)
     return jsonify({'success': True})
 
@@ -329,6 +387,7 @@ def api_update_user_status(user_id):
 @app.route('/api/user/<int:user_id>/delete', methods=['DELETE'])
 @admin_required
 def api_delete_user(user_id):
+    """Delete a user (admin only)"""
     delete_user(user_id)
     return jsonify({'success': True})
 
@@ -336,17 +395,22 @@ def api_delete_user(user_id):
 @app.route('/api/access/request', methods=['POST'])
 @login_required
 def api_access_request():
-    data = request.json
+    """Farmer requests access to a device"""
+    data = request.get_json(force=True)
     device_id = data.get('device_id', '')
     farmer_id = session.get('user_id')
     if create_access_request(farmer_id, device_id):
         return jsonify({'success': True})
-    return jsonify({'success': False, 'error': 'Request already exists'}), 400
+    return jsonify({
+        'success': False,
+        'error': 'Request already exists'
+    }), 400
 
 
 @app.route('/api/access/requests')
 @login_required
 def api_access_requests():
+    """Get access requests"""
     status = request.args.get('status', 'pending')
     return jsonify(get_access_requests(status))
 
@@ -354,7 +418,8 @@ def api_access_requests():
 @app.route('/api/access/<int:request_id>/update', methods=['PUT'])
 @login_required
 def api_update_access(request_id):
-    data = request.json
+    """Approve or reject access request"""
+    data = request.get_json(force=True)
     status = data.get('status', 'pending')
     update_access_request(request_id, status)
     return jsonify({'success': True})
@@ -363,6 +428,7 @@ def api_update_access(request_id):
 @app.route('/api/alerts')
 @login_required
 def api_alerts():
+    """Get alert history"""
     device_id = request.args.get('device_id')
     limit = request.args.get('limit', 20, type=int)
     return jsonify(get_alert_history(device_id, limit))
@@ -370,6 +436,7 @@ def api_alerts():
 
 @app.route('/api/weather')
 def api_weather():
+    """Get weather data"""
     city = request.args.get('city', 'Delhi')
     return jsonify(get_weather(city))
 
@@ -377,6 +444,7 @@ def api_weather():
 @app.route('/api/stats')
 @login_required
 def api_stats():
+    """Get system statistics"""
     return jsonify(get_system_stats())
 
 
@@ -384,14 +452,16 @@ def api_stats():
 @login_required
 def api_simulate():
     """Simulate sensor data for testing"""
-    data = request.json or {}
+    data = request.get_json(force=True) if request.is_json else {}
     device_id = data.get('device_id', 'ESP32_001')
     crop = data.get('crop', 'tomato')
 
     crop_info = get_crop_info(crop)
     if crop_info:
         ideal_temp = (crop_info['temp_min'] + crop_info['temp_max']) / 2
-        ideal_hum = (crop_info['humidity_min'] + crop_info['humidity_max']) / 2
+        ideal_hum = (
+            crop_info['humidity_min'] + crop_info['humidity_max']
+        ) / 2
         temp = ideal_temp + random.uniform(-8, 15)
         humidity = ideal_hum + random.uniform(-15, 15)
     else:
@@ -410,8 +480,11 @@ def api_simulate():
     # Process through AI engine
     history = get_sensor_history(device_id, 10)
     analysis = AIEngine.full_analysis(
-        sensor_data['temperature'], sensor_data['humidity'],
-        sensor_data['gas'], crop, history
+        sensor_data['temperature'],
+        sensor_data['humidity'],
+        sensor_data['gas'],
+        crop,
+        history
     )
 
     sensor_data.update({
@@ -424,28 +497,46 @@ def api_simulate():
     insert_sensor_data(sensor_data)
     check_and_send_alert(device_id, analysis, crop)
 
-    broadcast_data = {**sensor_data, 'analysis': analysis, 'timestamp': datetime.now().isoformat()}
+    broadcast_data = {
+        **sensor_data,
+        'analysis': analysis,
+        'timestamp': datetime.now().isoformat()
+    }
     socketio.emit('sensor_update', broadcast_data)
 
     return jsonify({'success': True, 'data': broadcast_data})
+
+
+# ======================== HEALTH CHECK ========================
+
+@app.route('/health')
+def health_check():
+    """Health check endpoint for Render"""
+    return jsonify({
+        'status': 'healthy',
+        'service': 'Kishan Kavach',
+        'timestamp': datetime.now().isoformat()
+    })
 
 
 # ======================== SOCKET.IO EVENTS ========================
 
 @socketio.on('connect')
 def handle_connect():
+    """Handle client connection"""
     print(f'[Socket.IO] Client connected: {request.sid}')
     emit('connected', {'status': 'Connected to Kishan Kavach'})
 
 
 @socketio.on('disconnect')
 def handle_disconnect():
+    """Handle client disconnection"""
     print(f'[Socket.IO] Client disconnected: {request.sid}')
 
 
 @socketio.on('sensor_data')
 def handle_sensor_data(data):
-    """Handle incoming sensor data from ESP32"""
+    """Handle incoming sensor data from ESP32 devices"""
     try:
         device_id = data.get('device_id', 'unknown')
         temperature = float(data.get('temperature', 0))
@@ -454,9 +545,15 @@ def handle_sensor_data(data):
         battery = float(data.get('battery', 100))
         crop = data.get('crop', 'wheat')
 
+        # Get history for trend analysis
         history = get_sensor_history(device_id, 10)
-        analysis = AIEngine.full_analysis(temperature, humidity, gas, crop, history)
 
+        # Run AI analysis
+        analysis = AIEngine.full_analysis(
+            temperature, humidity, gas, crop, history
+        )
+
+        # Prepare record
         sensor_record = {
             'device_id': device_id,
             'temperature': temperature,
@@ -470,9 +567,13 @@ def handle_sensor_data(data):
             'future_risk': analysis['future_risk']
         }
 
+        # Store in database
         insert_sensor_data(sensor_record)
+
+        # Check alerts
         check_and_send_alert(device_id, analysis, crop)
 
+        # Broadcast to all connected clients
         broadcast_data = {
             **sensor_record,
             'analysis': analysis,
@@ -480,10 +581,16 @@ def handle_sensor_data(data):
         }
 
         emit('sensor_update', broadcast_data, broadcast=True)
-        emit('data_received', {'status': 'ok', 'device_id': device_id})
+        emit('data_received', {
+            'status': 'ok',
+            'device_id': device_id
+        })
 
-        print(f"[Sensor] {device_id} | T:{temperature} H:{humidity} G:{gas} | "
-              f"Score:{analysis['health_score']} Risk:{analysis['spoilage_risk']}")
+        print(
+            f"[Sensor] {device_id} | T:{temperature} H:{humidity} "
+            f"G:{gas} | Score:{analysis['health_score']} "
+            f"Risk:{analysis['spoilage_risk']}"
+        )
 
     except Exception as e:
         print(f"[Error] Processing sensor data: {e}")
@@ -497,18 +604,24 @@ def handle_request_data(data):
     latest = get_latest_sensor_data(device_id)
     history = get_sensor_history(device_id, 50)
 
+    analysis = {}
+    predictions = {}
+
     if latest:
+        crop_key = latest.get('crop', 'wheat')
         analysis = AIEngine.full_analysis(
-            latest['temperature'], latest['humidity'], latest['gas'],
-            latest.get('crop', 'wheat'), history
+            latest['temperature'],
+            latest['humidity'],
+            latest['gas'],
+            crop_key,
+            history
         )
         predictions = AIEngine.generate_prediction_data(
-            latest['temperature'], latest['humidity'], latest['gas'],
-            analysis['trend']
+            latest['temperature'],
+            latest['humidity'],
+            latest['gas'],
+            analysis.get('trend', 'stable')
         )
-    else:
-        analysis = {}
-        predictions = {}
 
     emit('device_data', {
         'device_id': device_id,
@@ -519,10 +632,26 @@ def handle_request_data(data):
     })
 
 
-# ======================== INIT ========================
+# ======================== INITIALIZE ========================
 
+# Initialize database on import
 init_db()
+print("[Kishan Kavach] Database initialized successfully")
+print(f"[Kishan Kavach] Crop database: {len(CROP_DATABASE)} crops loaded")
+
+# ======================== MAIN ========================
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    socketio.run(app, host='0.0.0.0', port=port, debug=True)
+    debug = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+
+    print(f"[Kishan Kavach] Starting on port {port}")
+    print(f"[Kishan Kavach] Debug mode: {debug}")
+
+    socketio.run(
+        app,
+        host='0.0.0.0',
+        port=port,
+        debug=debug,
+        allow_unsafe_werkzeug=True
+    )
