@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Owner Panel - Kishan Kavach{% endblock %}
+
+{% block content %}
+<div class="panel-container">
+    <div class="panel-header">
+        <h1><i class="fas fa-users-cog"></i> Farmer Management</h1>
+        <p>Approve or reject farmer access requests</p>
+    </div>
+
+    <!-- Pending Requests -->
+    <div class="panel-section">
+        <h2><i class="fas fa-clock"></i> Pending Requests ({{ pending|length }})</h2>
+        {% if pending %}
+        <div class="request-grid">
+            {% for req in pending %}
+            <div class="request-card pending">
+                <div class="request-info">
+                    <h3><i class="fas fa-user"></i> {{ req.farmer.username }}</h3>
+                    <p><i class="fas fa-envelope"></i> {{ req.farmer.email }}</p>
+                    {% if req.message %}
+                    <p class="request-msg"><i class="fas fa-comment"></i> "{{ req.message }}"</p>
+                    {% endif %}
+                    <small><i class="fas fa-calendar"></i> {{ req.requested_at.strftime('%d %b %Y, %H:%M') }}</small>
+                </div>
+                <div class="request-actions">
+                    <form method="POST" action="{{ url_for('approve_farmer', request_id=req.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-success btn-sm">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('reject_farmer', request_id=req.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <p>No pending requests</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- All Farmers -->
+    <div class="panel-section">
+        <h2><i class="fas fa-users"></i> All Farmers ({{ farmers|length }})</h2>
+        {% if farmers %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for farmer in farmers %}
+                <tr>
+                    <td><i class="fas fa-user"></i> {{ farmer.username }}</td>
+                    <td>{{ farmer.email }}</td>
+                    <td>
+                        {% if farmer.is_approved %}
+                        <span class="badge badge-success">Approved</span>
+                        {% else %}
+                        <span class="badge badge-warning">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ farmer.created_at.strftime('%d %b %Y') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-user-slash"></i>
+            <p>No farmers registered yet</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="panel-footer">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
