@@ -419,12 +419,15 @@ def api_weather():
 
 
 @app.route('/sensor', methods=['POST'])
-def receive_sensor():
+def sensor_api():
     data = request.get_json()
 
+    print("ESP32 DATA:", data)
+
+    # सीधे socket event trigger करो
     socketio.emit('sensor_data', data)
 
-    return {"status": "received"}
+    return {"status": "ok"}
 
 
 # ============================================
