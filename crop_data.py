@@ -1,597 +1,889 @@
 """
-Kishan Kavach - Crop Intelligence Database
-100+ crops with complete profiles
+Kishan Kavach - Crop Database
+100+ Indian crops with ideal storage conditions
 """
 
 CROP_DATABASE = {
-    # ===== VEGETABLES =====
-    "tomato": {
-        "name": "Tomato", "temp_min": 10, "temp_max": 21, "humidity_min": 85, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 14, "category": "vegetable"
-    },
-    "potato": {
-        "name": "Potato", "temp_min": 4, "temp_max": 10, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "CO2", "shelf_life": 120, "category": "vegetable"
-    },
-    "onion": {
-        "name": "Onion", "temp_min": 0, "temp_max": 5, "humidity_min": 65, "humidity_max": 70,
-        "harmful_gas": "Ethylene", "shelf_life": 180, "category": "vegetable"
-    },
-    "carrot": {
-        "name": "Carrot", "temp_min": 0, "temp_max": 4, "humidity_min": 95, "humidity_max": 100,
-        "harmful_gas": "Ethylene", "shelf_life": 120, "category": "vegetable"
-    },
-    "cabbage": {
-        "name": "Cabbage", "temp_min": 0, "temp_max": 4, "humidity_min": 95, "humidity_max": 100,
-        "harmful_gas": "Ethylene", "shelf_life": 90, "category": "vegetable"
-    },
-    "cauliflower": {
-        "name": "Cauliflower", "temp_min": 0, "temp_max": 4, "humidity_min": 95, "humidity_max": 98,
-        "harmful_gas": "Ethylene", "shelf_life": 21, "category": "vegetable"
-    },
-    "spinach": {
-        "name": "Spinach", "temp_min": 0, "temp_max": 4, "humidity_min": 95, "humidity_max": 100,
-        "harmful_gas": "Ethylene", "shelf_life": 14, "category": "vegetable"
-    },
-    "brinjal": {
-        "name": "Brinjal/Eggplant", "temp_min": 10, "temp_max": 12, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 14, "category": "vegetable"
-    },
-    "capsicum": {
-        "name": "Capsicum/Bell Pepper", "temp_min": 7, "temp_max": 13, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 21, "category": "vegetable"
-    },
-    "cucumber": {
-        "name": "Cucumber", "temp_min": 10, "temp_max": 13, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 14, "category": "vegetable"
-    },
-    "peas": {
-        "name": "Green Peas", "temp_min": 0, "temp_max": 2, "humidity_min": 90, "humidity_max": 98,
-        "harmful_gas": "CO2", "shelf_life": 14, "category": "vegetable"
-    },
-    "beans": {
-        "name": "Green Beans", "temp_min": 4, "temp_max": 7, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "CO2", "shelf_life": 10, "category": "vegetable"
-    },
-    "okra": {
-        "name": "Okra/Lady Finger", "temp_min": 7, "temp_max": 10, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 10, "category": "vegetable"
-    },
-    "radish": {
-        "name": "Radish", "temp_min": 0, "temp_max": 4, "humidity_min": 95, "humidity_max": 100,
-        "harmful_gas": "CO2", "shelf_life": 30, "category": "vegetable"
-    },
-    "turnip": {
-        "name": "Turnip", "temp_min": 0, "temp_max": 4, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 120, "category": "vegetable"
-    },
-    "beetroot": {
-        "name": "Beetroot", "temp_min": 0, "temp_max": 4, "humidity_min": 95, "humidity_max": 100,
-        "harmful_gas": "CO2", "shelf_life": 120, "category": "vegetable"
-    },
-    "bitter_gourd": {
-        "name": "Bitter Gourd", "temp_min": 10, "temp_max": 13, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 14, "category": "vegetable"
-    },
-    "bottle_gourd": {
-        "name": "Bottle Gourd", "temp_min": 10, "temp_max": 15, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 21, "category": "vegetable"
-    },
-    "ridge_gourd": {
-        "name": "Ridge Gourd", "temp_min": 10, "temp_max": 13, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 10, "category": "vegetable"
-    },
-    "pumpkin": {
-        "name": "Pumpkin", "temp_min": 10, "temp_max": 15, "humidity_min": 50, "humidity_max": 70,
-        "harmful_gas": "Ethylene", "shelf_life": 90, "category": "vegetable"
-    },
-    "sweet_potato": {
-        "name": "Sweet Potato", "temp_min": 13, "temp_max": 16, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "CO2", "shelf_life": 120, "category": "vegetable"
-    },
-    "garlic": {
-        "name": "Garlic", "temp_min": 0, "temp_max": 4, "humidity_min": 60, "humidity_max": 70,
-        "harmful_gas": "CO2", "shelf_life": 180, "category": "vegetable"
-    },
-    "ginger": {
-        "name": "Ginger", "temp_min": 12, "temp_max": 14, "humidity_min": 65, "humidity_max": 70,
-        "harmful_gas": "CO2", "shelf_life": 150, "category": "vegetable"
-    },
-    "mushroom": {
-        "name": "Mushroom", "temp_min": 0, "temp_max": 4, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "CO2", "shelf_life": 7, "category": "vegetable"
-    },
-    "lettuce": {
-        "name": "Lettuce", "temp_min": 0, "temp_max": 4, "humidity_min": 95, "humidity_max": 100,
-        "harmful_gas": "Ethylene", "shelf_life": 21, "category": "vegetable"
-    },
-    "broccoli": {
-        "name": "Broccoli", "temp_min": 0, "temp_max": 4, "humidity_min": 95, "humidity_max": 100,
-        "harmful_gas": "Ethylene", "shelf_life": 14, "category": "vegetable"
-    },
-    "celery": {
-        "name": "Celery", "temp_min": 0, "temp_max": 4, "humidity_min": 95, "humidity_max": 100,
-        "harmful_gas": "Ethylene", "shelf_life": 21, "category": "vegetable"
-    },
-    "asparagus": {
-        "name": "Asparagus", "temp_min": 0, "temp_max": 2, "humidity_min": 95, "humidity_max": 100,
-        "harmful_gas": "Ethylene", "shelf_life": 21, "category": "vegetable"
-    },
-    "corn": {
-        "name": "Sweet Corn", "temp_min": 0, "temp_max": 2, "humidity_min": 95, "humidity_max": 98,
-        "harmful_gas": "CO2", "shelf_life": 7, "category": "vegetable"
-    },
-    "zucchini": {
-        "name": "Zucchini", "temp_min": 5, "temp_max": 10, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 14, "category": "vegetable"
-    },
-    "artichoke": {
-        "name": "Artichoke", "temp_min": 0, "temp_max": 2, "humidity_min": 95, "humidity_max": 100,
-        "harmful_gas": "CO2", "shelf_life": 14, "category": "vegetable"
-    },
-    "leek": {
-        "name": "Leek", "temp_min": 0, "temp_max": 2, "humidity_min": 95, "humidity_max": 100,
-        "harmful_gas": "Ethylene", "shelf_life": 60, "category": "vegetable"
-    },
-    "parsnip": {
-        "name": "Parsnip", "temp_min": 0, "temp_max": 2, "humidity_min": 95, "humidity_max": 100,
-        "harmful_gas": "CO2", "shelf_life": 120, "category": "vegetable"
-    },
-    "kale": {
-        "name": "Kale", "temp_min": 0, "temp_max": 2, "humidity_min": 95, "humidity_max": 100,
-        "harmful_gas": "Ethylene", "shelf_life": 14, "category": "vegetable"
-    },
-    "green_chili": {
-        "name": "Green Chili", "temp_min": 5, "temp_max": 10, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "CO2", "shelf_life": 21, "category": "vegetable"
-    },
-    "drumstick": {
-        "name": "Drumstick/Moringa", "temp_min": 7, "temp_max": 13, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 12, "category": "vegetable"
-    },
-    "fenugreek": {
-        "name": "Fenugreek Leaves", "temp_min": 0, "temp_max": 4, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ammonia", "shelf_life": 7, "category": "vegetable"
-    },
-    "coriander": {
-        "name": "Coriander/Cilantro", "temp_min": 0, "temp_max": 4, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 14, "category": "vegetable"
-    },
-    "mint": {
-        "name": "Mint", "temp_min": 0, "temp_max": 4, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 14, "category": "vegetable"
-    },
-    "spring_onion": {
-        "name": "Spring Onion", "temp_min": 0, "temp_max": 4, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 14, "category": "vegetable"
-    },
-
-    # ===== FRUITS =====
-    "apple": {
-        "name": "Apple", "temp_min": -1, "temp_max": 4, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 120, "category": "fruit"
-    },
-    "banana": {
-        "name": "Banana", "temp_min": 13, "temp_max": 15, "humidity_min": 85, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 14, "category": "fruit"
-    },
-    "mango": {
-        "name": "Mango", "temp_min": 10, "temp_max": 13, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 21, "category": "fruit"
-    },
-    "grape": {
-        "name": "Grape", "temp_min": -1, "temp_max": 0, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "SO2", "shelf_life": 56, "category": "fruit"
-    },
-    "orange": {
-        "name": "Orange", "temp_min": 3, "temp_max": 9, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 56, "category": "fruit"
-    },
-    "watermelon": {
-        "name": "Watermelon", "temp_min": 10, "temp_max": 15, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 21, "category": "fruit"
-    },
-    "papaya": {
-        "name": "Papaya", "temp_min": 7, "temp_max": 13, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 21, "category": "fruit"
-    },
-    "guava": {
-        "name": "Guava", "temp_min": 5, "temp_max": 10, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 21, "category": "fruit"
-    },
-    "pomegranate": {
-        "name": "Pomegranate", "temp_min": 5, "temp_max": 7, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "CO2", "shelf_life": 60, "category": "fruit"
-    },
-    "pineapple": {
-        "name": "Pineapple", "temp_min": 7, "temp_max": 13, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 28, "category": "fruit"
-    },
-    "strawberry": {
-        "name": "Strawberry", "temp_min": 0, "temp_max": 2, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 7, "category": "fruit"
-    },
-    "lemon": {
-        "name": "Lemon", "temp_min": 10, "temp_max": 13, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 30, "category": "fruit"
-    },
-    "coconut": {
-        "name": "Coconut", "temp_min": 0, "temp_max": 4, "humidity_min": 75, "humidity_max": 80,
-        "harmful_gas": "CO2", "shelf_life": 60, "category": "fruit"
-    },
-    "litchi": {
-        "name": "Litchi/Lychee", "temp_min": 1, "temp_max": 5, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "SO2", "shelf_life": 28, "category": "fruit"
-    },
-    "jackfruit": {
-        "name": "Jackfruit", "temp_min": 11, "temp_max": 13, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 42, "category": "fruit"
-    },
-    "custard_apple": {
-        "name": "Custard Apple", "temp_min": 5, "temp_max": 10, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 7, "category": "fruit"
-    },
-    "sapodilla": {
-        "name": "Sapodilla/Chikoo", "temp_min": 15, "temp_max": 20, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 21, "category": "fruit"
-    },
-    "fig": {
-        "name": "Fig", "temp_min": -1, "temp_max": 0, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 7, "category": "fruit"
-    },
-    "dates": {
-        "name": "Dates", "temp_min": 0, "temp_max": 4, "humidity_min": 70, "humidity_max": 75,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "fruit"
-    },
-    "kiwi": {
-        "name": "Kiwi", "temp_min": -1, "temp_max": 0, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 90, "category": "fruit"
-    },
-    "avocado": {
-        "name": "Avocado", "temp_min": 3, "temp_max": 7, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 28, "category": "fruit"
-    },
-    "peach": {
-        "name": "Peach", "temp_min": -1, "temp_max": 0, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 28, "category": "fruit"
-    },
-    "plum": {
-        "name": "Plum", "temp_min": -1, "temp_max": 0, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 35, "category": "fruit"
-    },
-    "cherry": {
-        "name": "Cherry", "temp_min": -1, "temp_max": 0, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "CO2", "shelf_life": 21, "category": "fruit"
-    },
-    "pear": {
-        "name": "Pear", "temp_min": -1, "temp_max": 0, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 90, "category": "fruit"
-    },
-    "dragon_fruit": {
-        "name": "Dragon Fruit", "temp_min": 7, "temp_max": 10, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 21, "category": "fruit"
-    },
-    "passion_fruit": {
-        "name": "Passion Fruit", "temp_min": 7, "temp_max": 10, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 30, "category": "fruit"
-    },
-    "star_fruit": {
-        "name": "Star Fruit", "temp_min": 5, "temp_max": 10, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 21, "category": "fruit"
-    },
-    "blueberry": {
-        "name": "Blueberry", "temp_min": -1, "temp_max": 0, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "CO2", "shelf_life": 14, "category": "fruit"
-    },
-    "raspberry": {
-        "name": "Raspberry", "temp_min": -1, "temp_max": 0, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "CO2", "shelf_life": 5, "category": "fruit"
-    },
-    "cranberry": {
-        "name": "Cranberry", "temp_min": 2, "temp_max": 4, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "CO2", "shelf_life": 60, "category": "fruit"
-    },
-    "apricot": {
-        "name": "Apricot", "temp_min": -1, "temp_max": 0, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 21, "category": "fruit"
-    },
-    "melon": {
-        "name": "Muskmelon", "temp_min": 2, "temp_max": 5, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 21, "category": "fruit"
-    },
-    "jamun": {
-        "name": "Jamun/Java Plum", "temp_min": 2, "temp_max": 5, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 7, "category": "fruit"
-    },
-    "amla": {
-        "name": "Amla/Indian Gooseberry", "temp_min": 4, "temp_max": 8, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "CO2", "shelf_life": 21, "category": "fruit"
-    },
-    "tamarind": {
-        "name": "Tamarind", "temp_min": 18, "temp_max": 22, "humidity_min": 60, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "fruit"
-    },
-
-    # ===== GRAINS & CEREALS =====
+    # === GRAINS & CEREALS ===
     "wheat": {
-        "name": "Wheat", "temp_min": 10, "temp_max": 20, "humidity_min": 60, "humidity_max": 70,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "grain"
+        "name": "Wheat (गेहूं)",
+        "ideal_temp": (10, 15),
+        "ideal_humidity": (60, 65),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 180,
+        "category": "grain"
     },
     "rice": {
-        "name": "Rice", "temp_min": 10, "temp_max": 20, "humidity_min": 60, "humidity_max": 70,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "grain"
+        "name": "Rice (चावल)",
+        "ideal_temp": (12, 18),
+        "ideal_humidity": (60, 65),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 365,
+        "category": "grain"
     },
     "maize": {
-        "name": "Maize/Corn", "temp_min": 5, "temp_max": 15, "humidity_min": 60, "humidity_max": 70,
-        "harmful_gas": "CO2", "shelf_life": 180, "category": "grain"
+        "name": "Maize (मक्का)",
+        "ideal_temp": (10, 15),
+        "ideal_humidity": (55, 65),
+        "gas_risk_threshold": 450,
+        "shelf_life_days": 180,
+        "category": "grain"
     },
     "barley": {
-        "name": "Barley", "temp_min": 5, "temp_max": 15, "humidity_min": 60, "humidity_max": 70,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "grain"
+        "name": "Barley (जौ)",
+        "ideal_temp": (10, 15),
+        "ideal_humidity": (55, 60),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 240,
+        "category": "grain"
     },
     "millet": {
-        "name": "Millet", "temp_min": 10, "temp_max": 20, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "grain"
+        "name": "Millet (बाजरा)",
+        "ideal_temp": (12, 18),
+        "ideal_humidity": (55, 65),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 150,
+        "category": "grain"
     },
     "sorghum": {
-        "name": "Sorghum/Jowar", "temp_min": 10, "temp_max": 20, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "grain"
+        "name": "Sorghum (ज्वार)",
+        "ideal_temp": (10, 16),
+        "ideal_humidity": (55, 65),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 180,
+        "category": "grain"
     },
     "oats": {
-        "name": "Oats", "temp_min": 5, "temp_max": 15, "humidity_min": 60, "humidity_max": 70,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "grain"
+        "name": "Oats (जई)",
+        "ideal_temp": (10, 15),
+        "ideal_humidity": (55, 60),
+        "gas_risk_threshold": 380,
+        "shelf_life_days": 120,
+        "category": "grain"
     },
     "ragi": {
-        "name": "Ragi/Finger Millet", "temp_min": 10, "temp_max": 20, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "grain"
-    },
-    "bajra": {
-        "name": "Bajra/Pearl Millet", "temp_min": 10, "temp_max": 20, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "grain"
-    },
-    "quinoa": {
-        "name": "Quinoa", "temp_min": 5, "temp_max": 15, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "grain"
+        "name": "Ragi (रागी)",
+        "ideal_temp": (12, 18),
+        "ideal_humidity": (55, 65),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 150,
+        "category": "grain"
     },
 
-    # ===== PULSES & LEGUMES =====
+    # === PULSES & LENTILS ===
     "chickpea": {
-        "name": "Chickpea/Chana", "temp_min": 5, "temp_max": 15, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "pulse"
+        "name": "Chickpea (चना)",
+        "ideal_temp": (10, 18),
+        "ideal_humidity": (55, 65),
+        "gas_risk_threshold": 380,
+        "shelf_life_days": 365,
+        "category": "pulse"
     },
     "lentil": {
-        "name": "Lentil/Masoor", "temp_min": 5, "temp_max": 15, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "pulse"
+        "name": "Lentil (मसूर)",
+        "ideal_temp": (10, 18),
+        "ideal_humidity": (55, 65),
+        "gas_risk_threshold": 380,
+        "shelf_life_days": 365,
+        "category": "pulse"
     },
     "moong": {
-        "name": "Moong Dal", "temp_min": 5, "temp_max": 15, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "pulse"
+        "name": "Moong Dal (मूंग)",
+        "ideal_temp": (10, 18),
+        "ideal_humidity": (55, 65),
+        "gas_risk_threshold": 380,
+        "shelf_life_days": 300,
+        "category": "pulse"
     },
     "urad": {
-        "name": "Urad Dal", "temp_min": 5, "temp_max": 15, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "pulse"
+        "name": "Urad Dal (उड़द)",
+        "ideal_temp": (10, 18),
+        "ideal_humidity": (55, 65),
+        "gas_risk_threshold": 380,
+        "shelf_life_days": 300,
+        "category": "pulse"
     },
     "toor": {
-        "name": "Toor/Arhar Dal", "temp_min": 5, "temp_max": 15, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "pulse"
+        "name": "Toor Dal (तुअर)",
+        "ideal_temp": (10, 18),
+        "ideal_humidity": (55, 65),
+        "gas_risk_threshold": 380,
+        "shelf_life_days": 365,
+        "category": "pulse"
     },
-    "kidney_bean": {
-        "name": "Kidney Bean/Rajma", "temp_min": 5, "temp_max": 15, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "pulse"
+    "rajma": {
+        "name": "Rajma (राजमा)",
+        "ideal_temp": (10, 18),
+        "ideal_humidity": (55, 65),
+        "gas_risk_threshold": 380,
+        "shelf_life_days": 365,
+        "category": "pulse"
+    },
+    "peanut": {
+        "name": "Peanut (मूंगफली)",
+        "ideal_temp": (5, 10),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 350,
+        "shelf_life_days": 120,
+        "category": "pulse"
     },
     "soybean": {
-        "name": "Soybean", "temp_min": 5, "temp_max": 15, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "pulse"
-    },
-    "groundnut": {
-        "name": "Groundnut/Peanut", "temp_min": 5, "temp_max": 10, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "Ammonia", "shelf_life": 270, "category": "pulse"
-    },
-    "black_gram": {
-        "name": "Black Gram", "temp_min": 5, "temp_max": 15, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "pulse"
-    },
-    "cowpea": {
-        "name": "Cowpea/Lobia", "temp_min": 5, "temp_max": 15, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "pulse"
+        "name": "Soybean (सोयाबीन)",
+        "ideal_temp": (10, 18),
+        "ideal_humidity": (55, 65),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 180,
+        "category": "pulse"
     },
 
-    # ===== SPICES =====
+    # === VEGETABLES ===
+    "potato": {
+        "name": "Potato (आलू)",
+        "ideal_temp": (4, 8),
+        "ideal_humidity": (85, 95),
+        "gas_risk_threshold": 300,
+        "shelf_life_days": 90,
+        "category": "vegetable"
+    },
+    "onion": {
+        "name": "Onion (प्याज)",
+        "ideal_temp": (0, 5),
+        "ideal_humidity": (65, 70),
+        "gas_risk_threshold": 300,
+        "shelf_life_days": 60,
+        "category": "vegetable"
+    },
+    "tomato": {
+        "name": "Tomato (टमाटर)",
+        "ideal_temp": (12, 15),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 250,
+        "shelf_life_days": 14,
+        "category": "vegetable"
+    },
+    "carrot": {
+        "name": "Carrot (गाजर)",
+        "ideal_temp": (0, 4),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 280,
+        "shelf_life_days": 30,
+        "category": "vegetable"
+    },
+    "cauliflower": {
+        "name": "Cauliflower (फूल गोभी)",
+        "ideal_temp": (0, 4),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 250,
+        "shelf_life_days": 14,
+        "category": "vegetable"
+    },
+    "cabbage": {
+        "name": "Cabbage (पत्ता गोभी)",
+        "ideal_temp": (0, 4),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 280,
+        "shelf_life_days": 30,
+        "category": "vegetable"
+    },
+    "brinjal": {
+        "name": "Brinjal (बैंगन)",
+        "ideal_temp": (10, 12),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 280,
+        "shelf_life_days": 7,
+        "category": "vegetable"
+    },
+    "okra": {
+        "name": "Okra/Lady Finger (भिंडी)",
+        "ideal_temp": (7, 10),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 280,
+        "shelf_life_days": 7,
+        "category": "vegetable"
+    },
+    "capsicum": {
+        "name": "Capsicum (शिमला मिर्च)",
+        "ideal_temp": (7, 10),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 280,
+        "shelf_life_days": 14,
+        "category": "vegetable"
+    },
+    "green_chili": {
+        "name": "Green Chili (हरी मिर्च)",
+        "ideal_temp": (5, 10),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 280,
+        "shelf_life_days": 14,
+        "category": "vegetable"
+    },
+    "spinach": {
+        "name": "Spinach (पालक)",
+        "ideal_temp": (0, 4),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 250,
+        "shelf_life_days": 7,
+        "category": "vegetable"
+    },
+    "peas": {
+        "name": "Green Peas (मटर)",
+        "ideal_temp": (0, 4),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 280,
+        "shelf_life_days": 10,
+        "category": "vegetable"
+    },
+    "bitter_gourd": {
+        "name": "Bitter Gourd (करेला)",
+        "ideal_temp": (10, 12),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 280,
+        "shelf_life_days": 10,
+        "category": "vegetable"
+    },
+    "bottle_gourd": {
+        "name": "Bottle Gourd (लौकी)",
+        "ideal_temp": (10, 12),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 280,
+        "shelf_life_days": 10,
+        "category": "vegetable"
+    },
+    "pumpkin": {
+        "name": "Pumpkin (कद्दू)",
+        "ideal_temp": (10, 15),
+        "ideal_humidity": (50, 70),
+        "gas_risk_threshold": 300,
+        "shelf_life_days": 90,
+        "category": "vegetable"
+    },
+    "cucumber": {
+        "name": "Cucumber (खीरा)",
+        "ideal_temp": (10, 12),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 280,
+        "shelf_life_days": 10,
+        "category": "vegetable"
+    },
+    "radish": {
+        "name": "Radish (मूली)",
+        "ideal_temp": (0, 4),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 280,
+        "shelf_life_days": 14,
+        "category": "vegetable"
+    },
+    "beetroot": {
+        "name": "Beetroot (चुकंदर)",
+        "ideal_temp": (0, 4),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 280,
+        "shelf_life_days": 30,
+        "category": "vegetable"
+    },
+    "garlic": {
+        "name": "Garlic (लहसुन)",
+        "ideal_temp": (0, 5),
+        "ideal_humidity": (60, 70),
+        "gas_risk_threshold": 300,
+        "shelf_life_days": 60,
+        "category": "vegetable"
+    },
+    "ginger": {
+        "name": "Ginger (अदरक)",
+        "ideal_temp": (12, 14),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 300,
+        "shelf_life_days": 30,
+        "category": "vegetable"
+    },
+    "mushroom": {
+        "name": "Mushroom (मशरूम)",
+        "ideal_temp": (0, 4),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 200,
+        "shelf_life_days": 5,
+        "category": "vegetable"
+    },
+    "sweet_potato": {
+        "name": "Sweet Potato (शकरकंद)",
+        "ideal_temp": (12, 15),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 300,
+        "shelf_life_days": 30,
+        "category": "vegetable"
+    },
+    "corn": {
+        "name": "Sweet Corn (भुट्टा)",
+        "ideal_temp": (0, 4),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 300,
+        "shelf_life_days": 5,
+        "category": "vegetable"
+    },
+    "drumstick": {
+        "name": "Drumstick (सहजन)",
+        "ideal_temp": (10, 12),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 280,
+        "shelf_life_days": 10,
+        "category": "vegetable"
+    },
+
+    # === FRUITS ===
+    "apple": {
+        "name": "Apple (सेब)",
+        "ideal_temp": (0, 4),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 250,
+        "shelf_life_days": 60,
+        "category": "fruit"
+    },
+    "banana": {
+        "name": "Banana (केला)",
+        "ideal_temp": (13, 15),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 200,
+        "shelf_life_days": 7,
+        "category": "fruit"
+    },
+    "mango": {
+        "name": "Mango (आम)",
+        "ideal_temp": (12, 14),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 200,
+        "shelf_life_days": 10,
+        "category": "fruit"
+    },
+    "grape": {
+        "name": "Grape (अंगूर)",
+        "ideal_temp": (0, 2),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 200,
+        "shelf_life_days": 14,
+        "category": "fruit"
+    },
+    "orange": {
+        "name": "Orange (संतरा)",
+        "ideal_temp": (3, 8),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 250,
+        "shelf_life_days": 30,
+        "category": "fruit"
+    },
+    "papaya": {
+        "name": "Papaya (पपीता)",
+        "ideal_temp": (10, 12),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 200,
+        "shelf_life_days": 7,
+        "category": "fruit"
+    },
+    "guava": {
+        "name": "Guava (अमरूद)",
+        "ideal_temp": (8, 10),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 250,
+        "shelf_life_days": 10,
+        "category": "fruit"
+    },
+    "watermelon": {
+        "name": "Watermelon (तरबूज)",
+        "ideal_temp": (10, 15),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 250,
+        "shelf_life_days": 14,
+        "category": "fruit"
+    },
+    "pomegranate": {
+        "name": "Pomegranate (अनार)",
+        "ideal_temp": (5, 7),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 250,
+        "shelf_life_days": 30,
+        "category": "fruit"
+    },
+    "lemon": {
+        "name": "Lemon (नींबू)",
+        "ideal_temp": (10, 13),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 250,
+        "shelf_life_days": 14,
+        "category": "fruit"
+    },
+    "pineapple": {
+        "name": "Pineapple (अनानास)",
+        "ideal_temp": (7, 12),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 200,
+        "shelf_life_days": 14,
+        "category": "fruit"
+    },
+    "litchi": {
+        "name": "Litchi (लीची)",
+        "ideal_temp": (1, 5),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 200,
+        "shelf_life_days": 7,
+        "category": "fruit"
+    },
+    "coconut": {
+        "name": "Coconut (नारियल)",
+        "ideal_temp": (0, 5),
+        "ideal_humidity": (75, 85),
+        "gas_risk_threshold": 350,
+        "shelf_life_days": 60,
+        "category": "fruit"
+    },
+    "jackfruit": {
+        "name": "Jackfruit (कटहल)",
+        "ideal_temp": (12, 14),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 250,
+        "shelf_life_days": 7,
+        "category": "fruit"
+    },
+    "sapota": {
+        "name": "Sapota/Chikoo (चीकू)",
+        "ideal_temp": (15, 20),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 250,
+        "shelf_life_days": 10,
+        "category": "fruit"
+    },
+    "custard_apple": {
+        "name": "Custard Apple (सीताफल)",
+        "ideal_temp": (15, 20),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 200,
+        "shelf_life_days": 5,
+        "category": "fruit"
+    },
+    "fig": {
+        "name": "Fig (अंजीर)",
+        "ideal_temp": (0, 2),
+        "ideal_humidity": (85, 90),
+        "gas_risk_threshold": 200,
+        "shelf_life_days": 7,
+        "category": "fruit"
+    },
+    "strawberry": {
+        "name": "Strawberry (स्ट्रॉबेरी)",
+        "ideal_temp": (0, 2),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 200,
+        "shelf_life_days": 5,
+        "category": "fruit"
+    },
+    "kiwi": {
+        "name": "Kiwi (कीवी)",
+        "ideal_temp": (0, 2),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 250,
+        "shelf_life_days": 30,
+        "category": "fruit"
+    },
+    "plum": {
+        "name": "Plum (आलूबुखारा)",
+        "ideal_temp": (0, 2),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 250,
+        "shelf_life_days": 14,
+        "category": "fruit"
+    },
+    "peach": {
+        "name": "Peach (आड़ू)",
+        "ideal_temp": (0, 2),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 250,
+        "shelf_life_days": 14,
+        "category": "fruit"
+    },
+    "cherry": {
+        "name": "Cherry (चेरी)",
+        "ideal_temp": (0, 2),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 200,
+        "shelf_life_days": 7,
+        "category": "fruit"
+    },
+    "apricot": {
+        "name": "Apricot (खुबानी)",
+        "ideal_temp": (0, 2),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 250,
+        "shelf_life_days": 10,
+        "category": "fruit"
+    },
+    "pear": {
+        "name": "Pear (नाशपाती)",
+        "ideal_temp": (0, 2),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 250,
+        "shelf_life_days": 30,
+        "category": "fruit"
+    },
+
+    # === SPICES ===
     "turmeric": {
-        "name": "Turmeric", "temp_min": 15, "temp_max": 25, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 730, "category": "spice"
-    },
-    "cumin": {
-        "name": "Cumin/Jeera", "temp_min": 15, "temp_max": 25, "humidity_min": 50, "humidity_max": 60,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "spice"
-    },
-    "coriander_seed": {
-        "name": "Coriander Seed", "temp_min": 15, "temp_max": 25, "humidity_min": 50, "humidity_max": 60,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "spice"
+        "name": "Turmeric (हल्दी)",
+        "ideal_temp": (15, 25),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 450,
+        "shelf_life_days": 365,
+        "category": "spice"
     },
     "red_chili": {
-        "name": "Red Chili", "temp_min": 15, "temp_max": 25, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "spice"
+        "name": "Red Chili (लाल मिर्च)",
+        "ideal_temp": (15, 25),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 180,
+        "category": "spice"
     },
-    "black_pepper": {
-        "name": "Black Pepper", "temp_min": 15, "temp_max": 25, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 730, "category": "spice"
+    "cumin": {
+        "name": "Cumin (जीरा)",
+        "ideal_temp": (15, 25),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 365,
+        "category": "spice"
+    },
+    "coriander": {
+        "name": "Coriander (धनिया)",
+        "ideal_temp": (15, 25),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 180,
+        "category": "spice"
+    },
+    "mustard_seed": {
+        "name": "Mustard Seed (राई)",
+        "ideal_temp": (15, 25),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 365,
+        "category": "spice"
+    },
+    "fenugreek": {
+        "name": "Fenugreek (मेथी)",
+        "ideal_temp": (15, 25),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 365,
+        "category": "spice"
     },
     "cardamom": {
-        "name": "Cardamom", "temp_min": 15, "temp_max": 25, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "spice"
+        "name": "Cardamom (इलायची)",
+        "ideal_temp": (15, 25),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 365,
+        "category": "spice"
+    },
+    "black_pepper": {
+        "name": "Black Pepper (काली मिर्च)",
+        "ideal_temp": (15, 25),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 365,
+        "category": "spice"
     },
     "clove": {
-        "name": "Clove", "temp_min": 15, "temp_max": 25, "humidity_min": 50, "humidity_max": 60,
-        "harmful_gas": "CO2", "shelf_life": 730, "category": "spice"
+        "name": "Clove (लौंग)",
+        "ideal_temp": (15, 25),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 365,
+        "category": "spice"
     },
     "cinnamon": {
-        "name": "Cinnamon", "temp_min": 15, "temp_max": 25, "humidity_min": 50, "humidity_max": 60,
-        "harmful_gas": "CO2", "shelf_life": 730, "category": "spice"
-    },
-    "mustard": {
-        "name": "Mustard Seed", "temp_min": 10, "temp_max": 20, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "spice"
+        "name": "Cinnamon (दालचीनी)",
+        "ideal_temp": (15, 25),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 365,
+        "category": "spice"
     },
     "fennel": {
-        "name": "Fennel/Saunf", "temp_min": 15, "temp_max": 25, "humidity_min": 50, "humidity_max": 60,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "spice"
+        "name": "Fennel (सौंफ)",
+        "ideal_temp": (15, 25),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 365,
+        "category": "spice"
     },
-    "fenugreek_seed": {
-        "name": "Fenugreek Seed", "temp_min": 15, "temp_max": 25, "humidity_min": 50, "humidity_max": 60,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "spice"
-    },
-    "nutmeg": {
-        "name": "Nutmeg", "temp_min": 15, "temp_max": 25, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 730, "category": "spice"
+    "ajwain": {
+        "name": "Ajwain (अजवाइन)",
+        "ideal_temp": (15, 25),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 365,
+        "category": "spice"
     },
     "saffron": {
-        "name": "Saffron", "temp_min": 5, "temp_max": 15, "humidity_min": 40, "humidity_max": 50,
-        "harmful_gas": "CO2", "shelf_life": 730, "category": "spice"
+        "name": "Saffron (केसर)",
+        "ideal_temp": (5, 15),
+        "ideal_humidity": (40, 50),
+        "gas_risk_threshold": 350,
+        "shelf_life_days": 730,
+        "category": "spice"
     },
 
-    # ===== OILSEEDS =====
-    "sunflower": {
-        "name": "Sunflower Seed", "temp_min": 5, "temp_max": 15, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "oilseed"
-    },
+    # === OIL SEEDS ===
     "sesame": {
-        "name": "Sesame/Til", "temp_min": 5, "temp_max": 15, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "oilseed"
+        "name": "Sesame (तिल)",
+        "ideal_temp": (10, 20),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 180,
+        "category": "oilseed"
+    },
+    "sunflower": {
+        "name": "Sunflower Seed (सूरजमुखी)",
+        "ideal_temp": (10, 20),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 180,
+        "category": "oilseed"
     },
     "linseed": {
-        "name": "Linseed/Flax", "temp_min": 5, "temp_max": 15, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "oilseed"
+        "name": "Linseed (अलसी)",
+        "ideal_temp": (10, 20),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 180,
+        "category": "oilseed"
     },
     "castor": {
-        "name": "Castor Seed", "temp_min": 10, "temp_max": 20, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "oilseed"
+        "name": "Castor (अरंडी)",
+        "ideal_temp": (10, 20),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 180,
+        "category": "oilseed"
     },
-    "rapeseed": {
-        "name": "Rapeseed/Canola", "temp_min": 5, "temp_max": 15, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "oilseed"
+    "groundnut": {
+        "name": "Groundnut (मूंगफली)",
+        "ideal_temp": (5, 10),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 350,
+        "shelf_life_days": 120,
+        "category": "oilseed"
     },
 
-    # ===== CASH CROPS =====
+    # === CASH CROPS ===
     "sugarcane": {
-        "name": "Sugarcane", "temp_min": 20, "temp_max": 30, "humidity_min": 70, "humidity_max": 80,
-        "harmful_gas": "Ethylene", "shelf_life": 14, "category": "cash_crop"
+        "name": "Sugarcane (गन्ना)",
+        "ideal_temp": (5, 10),
+        "ideal_humidity": (80, 85),
+        "gas_risk_threshold": 300,
+        "shelf_life_days": 14,
+        "category": "cash_crop"
     },
     "cotton": {
-        "name": "Cotton", "temp_min": 10, "temp_max": 25, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "cash_crop"
+        "name": "Cotton (कपास)",
+        "ideal_temp": (15, 25),
+        "ideal_humidity": (45, 55),
+        "gas_risk_threshold": 500,
+        "shelf_life_days": 365,
+        "category": "cash_crop"
     },
     "jute": {
-        "name": "Jute", "temp_min": 15, "temp_max": 25, "humidity_min": 60, "humidity_max": 70,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "cash_crop"
-    },
-    "tobacco": {
-        "name": "Tobacco", "temp_min": 15, "temp_max": 25, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "Ammonia", "shelf_life": 365, "category": "cash_crop"
+        "name": "Jute (जूट)",
+        "ideal_temp": (15, 25),
+        "ideal_humidity": (50, 65),
+        "gas_risk_threshold": 450,
+        "shelf_life_days": 365,
+        "category": "cash_crop"
     },
     "tea": {
-        "name": "Tea", "temp_min": 10, "temp_max": 20, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 730, "category": "cash_crop"
+        "name": "Tea (चाय)",
+        "ideal_temp": (5, 15),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 350,
+        "shelf_life_days": 365,
+        "category": "cash_crop"
     },
     "coffee": {
-        "name": "Coffee", "temp_min": 10, "temp_max": 20, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "cash_crop"
+        "name": "Coffee (कॉफी)",
+        "ideal_temp": (10, 20),
+        "ideal_humidity": (50, 60),
+        "gas_risk_threshold": 350,
+        "shelf_life_days": 365,
+        "category": "cash_crop"
+    },
+    "tobacco": {
+        "name": "Tobacco (तम्बाकू)",
+        "ideal_temp": (15, 25),
+        "ideal_humidity": (55, 65),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 365,
+        "category": "cash_crop"
     },
     "rubber": {
-        "name": "Rubber", "temp_min": 20, "temp_max": 30, "humidity_min": 70, "humidity_max": 80,
-        "harmful_gas": "Ammonia", "shelf_life": 365, "category": "cash_crop"
+        "name": "Rubber (रबड़)",
+        "ideal_temp": (15, 25),
+        "ideal_humidity": (55, 65),
+        "gas_risk_threshold": 450,
+        "shelf_life_days": 365,
+        "category": "cash_crop"
     },
 
-    # ===== FLOWERS =====
-    "rose": {
-        "name": "Rose", "temp_min": 1, "temp_max": 4, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 7, "category": "flower"
-    },
-    "marigold": {
-        "name": "Marigold", "temp_min": 2, "temp_max": 5, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 5, "category": "flower"
-    },
-    "jasmine": {
-        "name": "Jasmine", "temp_min": 2, "temp_max": 5, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 3, "category": "flower"
-    },
-    "tuberose": {
-        "name": "Tuberose", "temp_min": 2, "temp_max": 5, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 5, "category": "flower"
-    },
-    "chrysanthemum": {
-        "name": "Chrysanthemum", "temp_min": 1, "temp_max": 4, "humidity_min": 90, "humidity_max": 95,
-        "harmful_gas": "Ethylene", "shelf_life": 14, "category": "flower"
-    },
-    "gladiolus": {
-        "name": "Gladiolus", "temp_min": 2, "temp_max": 5, "humidity_min": 85, "humidity_max": 90,
-        "harmful_gas": "Ethylene", "shelf_life": 7, "category": "flower"
-    },
-
-    # ===== DAIRY & OTHERS =====
+    # === DAIRY & OTHER ===
     "milk": {
-        "name": "Milk", "temp_min": 1, "temp_max": 4, "humidity_min": 80, "humidity_max": 85,
-        "harmful_gas": "Ammonia", "shelf_life": 7, "category": "dairy"
+        "name": "Milk (दूध)",
+        "ideal_temp": (2, 4),
+        "ideal_humidity": (80, 90),
+        "gas_risk_threshold": 150,
+        "shelf_life_days": 5,
+        "category": "dairy"
     },
     "curd": {
-        "name": "Curd/Yogurt", "temp_min": 1, "temp_max": 4, "humidity_min": 80, "humidity_max": 85,
-        "harmful_gas": "CO2", "shelf_life": 14, "category": "dairy"
+        "name": "Curd (दही)",
+        "ideal_temp": (2, 5),
+        "ideal_humidity": (80, 90),
+        "gas_risk_threshold": 150,
+        "shelf_life_days": 7,
+        "category": "dairy"
+    },
+    "paneer": {
+        "name": "Paneer (पनीर)",
+        "ideal_temp": (2, 4),
+        "ideal_humidity": (80, 90),
+        "gas_risk_threshold": 150,
+        "shelf_life_days": 5,
+        "category": "dairy"
+    },
+    "ghee": {
+        "name": "Ghee (घी)",
+        "ideal_temp": (15, 25),
+        "ideal_humidity": (40, 50),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 365,
+        "category": "dairy"
     },
     "butter": {
-        "name": "Butter", "temp_min": -1, "temp_max": 4, "humidity_min": 70, "humidity_max": 80,
-        "harmful_gas": "CO2", "shelf_life": 60, "category": "dairy"
+        "name": "Butter (मक्खन)",
+        "ideal_temp": (2, 5),
+        "ideal_humidity": (75, 85),
+        "gas_risk_threshold": 200,
+        "shelf_life_days": 30,
+        "category": "dairy"
     },
-    "cheese": {
-        "name": "Cheese", "temp_min": 1, "temp_max": 7, "humidity_min": 75, "humidity_max": 85,
-        "harmful_gas": "Ammonia", "shelf_life": 90, "category": "dairy"
+
+    # === DRY FRUITS ===
+    "almond": {
+        "name": "Almond (बादाम)",
+        "ideal_temp": (0, 5),
+        "ideal_humidity": (55, 65),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 365,
+        "category": "dry_fruit"
     },
-    "honey": {
-        "name": "Honey", "temp_min": 18, "temp_max": 24, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 730, "category": "other"
+    "cashew": {
+        "name": "Cashew (काजू)",
+        "ideal_temp": (5, 10),
+        "ideal_humidity": (55, 65),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 180,
+        "category": "dry_fruit"
     },
-    "jaggery": {
-        "name": "Jaggery/Gud", "temp_min": 15, "temp_max": 25, "humidity_min": 55, "humidity_max": 65,
-        "harmful_gas": "CO2", "shelf_life": 365, "category": "other"
+    "walnut": {
+        "name": "Walnut (अखरोट)",
+        "ideal_temp": (0, 5),
+        "ideal_humidity": (55, 65),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 365,
+        "category": "dry_fruit"
+    },
+    "pistachio": {
+        "name": "Pistachio (पिस्ता)",
+        "ideal_temp": (0, 5),
+        "ideal_humidity": (55, 65),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 365,
+        "category": "dry_fruit"
+    },
+    "raisin": {
+        "name": "Raisin (किशमिश)",
+        "ideal_temp": (5, 10),
+        "ideal_humidity": (55, 65),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 365,
+        "category": "dry_fruit"
+    },
+    "dates": {
+        "name": "Dates (खजूर)",
+        "ideal_temp": (0, 5),
+        "ideal_humidity": (55, 65),
+        "gas_risk_threshold": 400,
+        "shelf_life_days": 365,
+        "category": "dry_fruit"
+    },
+
+    # === FLOWERS ===
+    "marigold": {
+        "name": "Marigold (गेंदा)",
+        "ideal_temp": (2, 5),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 200,
+        "shelf_life_days": 3,
+        "category": "flower"
+    },
+    "rose": {
+        "name": "Rose (गुलाब)",
+        "ideal_temp": (1, 4),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 200,
+        "shelf_life_days": 5,
+        "category": "flower"
+    },
+    "jasmine": {
+        "name": "Jasmine (चमेली)",
+        "ideal_temp": (2, 5),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 200,
+        "shelf_life_days": 2,
+        "category": "flower"
+    },
+    "lotus": {
+        "name": "Lotus (कमल)",
+        "ideal_temp": (2, 5),
+        "ideal_humidity": (90, 95),
+        "gas_risk_threshold": 200,
+        "shelf_life_days": 3,
+        "category": "flower"
     },
 }
 
 
 def get_crop_info(crop_key):
-    """Get crop information by key"""
+    """Get crop info by key, returns None if not found"""
     crop_key = crop_key.lower().strip().replace(' ', '_')
-    return CROP_DATABASE.get(crop_key, None)
+    return CROP_DATABASE.get(crop_key)
 
 
 def get_all_crops():
-    """Get all crops grouped by category"""
-    categories = {}
-    for key, crop in CROP_DATABASE.items():
-        cat = crop['category']
-        if cat not in categories:
-            categories[cat] = []
-        crop_with_key = crop.copy()
-        crop_with_key['key'] = key
-        categories[cat].append(crop_with_key)
-    return categories
+    """Return all crops sorted by category"""
+    return {k: v for k, v in sorted(CROP_DATABASE.items(), key=lambda x: x[1]['category'])}
 
 
-def get_crop_list():
-    """Get flat list of all crops"""
-    result = []
-    for key, crop in CROP_DATABASE.items():
-        crop_with_key = crop.copy()
-        crop_with_key['key'] = key
-        result.append(crop_with_key)
-    return result
+def get_crops_by_category(category):
+    """Return crops filtered by category"""
+    return {k: v for k, v in CROP_DATABASE.items() if v['category'] == category}
+
+
+def get_categories():
+    """Return all unique categories"""
+    return list(set(v['category'] for v in CROP_DATABASE.values()))
 
 
 def search_crops(query):
     """Search crops by name"""
-    query = query.lower()
-    results = []
-    for key, crop in CROP_DATABASE.items():
-        if query in key or query in crop['name'].lower():
-            crop_with_key = crop.copy()
-            crop_with_key['key'] = key
-            results.append(crop_with_key)
+    query = query.lower().strip()
+    results = {}
+    for k, v in CROP_DATABASE.items():
+        if query in k or query in v['name'].lower():
+            results[k] = v
     return results
