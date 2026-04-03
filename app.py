@@ -418,6 +418,15 @@ def api_weather():
         return jsonify({'status': 'error', 'message': str(e)})
 
 
+@app.route('/sensor', methods=['POST'])
+def receive_sensor():
+    data = request.get_json()
+
+    socketio.emit('sensor_data', data)
+
+    return {"status": "received"}
+
+
 # ============================================
 # SOCKET.IO — REAL DATA HANDLER (CORE)
 # ============================================
