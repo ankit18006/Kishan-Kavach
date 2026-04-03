@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Access Request - Kishan Kavach{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card" style="max-width: 550px;">
+        <div class="auth-header">
+            <div class="auth-logo" style="background: var(--warning);">
+                <i class="fas fa-hourglass-half"></i>
+            </div>
+            <h1>Access Pending</h1>
+            <p>Your account needs approval from the warehouse owner</p>
+        </div>
+
+        <form method="POST" class="auth-form">
+            <div class="form-group">
+                <label><i class="fas fa-comment"></i> Message to Owner (Optional)</label>
+                <textarea name="message" rows="3"
+                          placeholder="Why do you need access?"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full">
+                <i class="fas fa-paper-plane"></i> Send Access Request
+            </button>
+        </form>
+
+        {% if requests %}
+        <div class="request-history">
+            <h3><i class="fas fa-history"></i> Your Requests</h3>
+            {% for req in requests %}
+            <div class="request-item status-{{ req.status }}">
+                <div class="request-status">
+                    {% if req.status == 'pending' %}
+                        <i class="fas fa-clock"></i> Pending
+                    {% elif req.status == 'approved' %}
+                        <i class="fas fa-check-circle"></i> Approved
+                    {% else %}
+                        <i class="fas fa-times-circle"></i> Rejected
+                    {% endif %}
+                </div>
+                <small>{{ req.requested_at.strftime('%d %b %Y, %H:%M') }}</small>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
