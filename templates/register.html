@@ -1,63 +1,48 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Kishan Kavach</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body class="auth-page">
-    <div class="auth-container">
-        <div class="auth-card glass-card">
-            <div class="auth-header">
-                <i class="fas fa-shield-alt auth-logo"></i>
-                <h1>Kishan Kavach</h1>
-                <p>Create your account</p>
-            </div>
+{% extends "base.html" %}
+{% block title %}Register - Kishan Kavach{% endblock %}
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            {% for category, message in messages %}
-            <div class="flash-message flash-{{ category }}">
-                <i class="fas fa-{% if category == 'error' %}exclamation-circle{% elif category == 'success' %}check-circle{% else %}info-circle{% endif %}"></i>
-                {{ message }}
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo">
+                <i class="fas fa-user-plus"></i>
             </div>
-            {% endfor %}
-            {% endif %}
-            {% endwith %}
+            <h1>Create Account</h1>
+            <p>Join Kishan Kavach</p>
+        </div>
 
-            <form method="POST" class="auth-form">
-                <div class="form-group">
-                    <label><i class="fas fa-user"></i> Username</label>
-                    <input type="text" name="username" required placeholder="Choose a username">
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-lock"></i> Password</label>
-                    <input type="password" name="password" required placeholder="Create a password">
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-phone"></i> Phone (WhatsApp)</label>
-                    <input type="tel" name="phone" placeholder="+91XXXXXXXXXX">
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-user-tag"></i> Role</label>
-                    <select name="role" class="form-select">
-                        <option value="farmer">🌾 Farmer</option>
-                        <option value="owner">🏭 Storage Owner</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn-submit btn-glow">
-                    <i class="fas fa-user-plus"></i> Register
-                </button>
-            </form>
-
-            <div class="auth-footer">
-                <p>Already have an account? <a href="/login">Login here</a></p>
-                <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Back to Home</a>
+        <form method="POST" class="auth-form">
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> Username</label>
+                <input type="text" name="username" required placeholder="Choose a username">
             </div>
+            <div class="form-group">
+                <label><i class="fas fa-envelope"></i> Email</label>
+                <input type="email" name="email" required placeholder="Your email address">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Password</label>
+                <input type="password" name="password" required placeholder="Create a password"
+                       minlength="4">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-user-tag"></i> Role</label>
+                <select name="role" class="form-select">
+                    <option value="farmer">🌾 Farmer</option>
+                    <option value="owner">🏭 Warehouse Owner</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full">
+                <i class="fas fa-user-plus"></i> Register
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Already have an account?
+                <a href="{{ url_for('login') }}">Login here</a>
+            </p>
         </div>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}
